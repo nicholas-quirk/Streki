@@ -29,6 +29,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -190,6 +193,10 @@ public class MainUI {
         menuItemNew.setText("New");
         menuItemNew.setOnAction((ae) -> createCanvasPropertiesModal(stage));
 
+        MenuItem menuItemSave = new MenuItem("_Save");
+        menuItemSave.setMnemonicParsing(true);
+        menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
+        
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
         menuItemExport.setOnAction((ae) -> {
@@ -235,7 +242,7 @@ public class MainUI {
         menuItemExit.setText("Exit");
         menuItemExit.setOnAction((ae) -> System.exit(0));
         
-        fileMenu.getItems().addAll(menuItemNew, menuItemExport, menuItemExit);
+        fileMenu.getItems().addAll(menuItemNew, menuItemSave, menuItemExport, menuItemExit);
     }
     
     
