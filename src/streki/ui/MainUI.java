@@ -2,8 +2,14 @@ package streki.ui;
 
 import streki.utility.CanvasBuilder;
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -52,8 +58,40 @@ import streki.utility.Pen;
  *
  * @author Nicholas Quirk
  */
-public class MainUI {
+public class MainUI implements Serializable {
     
+    private void readObject() {
+
+        try {
+            FileInputStream door = new FileInputStream("C:\\MyObject.ser");
+            ObjectInputStream reader = new ObjectInputStream(door);
+            this.cs = (ArrayList<cs)reader.readObject();
+            System.out.println(cs+" "+cs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeObject() {
+        try {
+            // Serialize data object to a file
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("C:\\MyObject.ser"));
+            out.writeObject(this.cs);
+            out.close();
+
+            // Serialize data object to a byte array
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(bos);
+            out.writeObject(this.cs);
+            out.close();
+
+            // Get the bytes of the serialized object
+            byte[] buf = bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private final static Logger LOGGER = Logger.getLogger(MainUI.class.getName());
     
     private static int WIDTH = 800;
@@ -71,8 +109,15 @@ public class MainUI {
     List<Canvas> cs = new ArrayList<Canvas>();
     Color strokeColor;
     Pen pen;
+    Stage stage;
+    
+    public MainUI() {
+        System.out.println("\n\n\n\n\n[%] "+this.stage);
+    }
     
     public MainUI(final Stage stage) {
+        
+        this.stage = stage;
         
         if(Streki.debug) LOGGER.info("Initializing Pen...");
         pen = Pen.getInstance();
@@ -100,24 +145,7 @@ public class MainUI {
         stackPane = new CustomStackPane();
         
         if(Streki.debug) LOGGER.info("Initializing canvas...");
-        canvas = (new CanvasBuilder())
-                .setStage(stage)
-                .setWidth(WIDTH)
-                .setHeight(HEIGHT)
-                .setGlobalAlpha(1)
-                .setFillColor(Color.WHITE)
-                .setCs(cs)
-                .setStackPane(stackPane)
-                .createCanvas();
-        Event.fireEvent(canvas, 
-                new MouseEvent(MouseEvent.MOUSE_PRESSED, 0, 0, 0, 0, 
-                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
-        
-        if(Streki.debug) LOGGER.info("Adding canvas to list...");
-        cs.add(canvas);
-        
-        if(Streki.debug) LOGGER.info("Adding cavnas to stack pane...");
-        stackPane.getChildren().add(canvas);
+        //createColoringPage(stage, "coloring-adult-mask.gif");
         
         if(Streki.debug) LOGGER.info("Adding stack pane to scroll pane...");
         scrollPane.setContent(stackPane);
@@ -189,13 +217,29 @@ public class MainUI {
     
     private void createFileMenuChoices(final Stage stage) {
         if(Streki.debug) LOGGER.info("Creating file menu choices...");
-        MenuItem menuItemNew = new MenuItem();
-        menuItemNew.setText("New");
-        menuItemNew.setOnAction((ae) -> createCanvasPropertiesModal(stage));
+        
+        Menu newMenu = new Menu();
+        newMenu.setText("New");
+        
+        MenuItem newMenuItem1 = new MenuItem();
+        newMenuItem1.setText("Face");
+        //newMenuItem1.setOnAction((ae) -> createCanvasPropertiesModal(stage));
+        newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif"));
+        newMenu.getItems().add(newMenuItem1);
+        
+        //MenuItem menuItemNew = new MenuItem();
+        //menuItemNew.setText("New");
+        //menuItemNew.setOnAction((ae) -> createCanvasPropertiesModal(stage));
 
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
         menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
+        menuItemSave.setOnAction((ae) -> writeObject());
+        
+        MenuItem menuItemLoad = new MenuItem("_Load");
+        menuItemLoad.setMnemonicParsing(true);
+        menuItemLoad.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN));
+        menuItemLoad.setOnAction((ae) -> readObject());
         
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
@@ -242,9 +286,31 @@ public class MainUI {
         menuItemExit.setText("Exit");
         menuItemExit.setOnAction((ae) -> System.exit(0));
         
-        fileMenu.getItems().addAll(menuItemNew, menuItemSave, menuItemExport, menuItemExit);
+        fileMenu.getItems().addAll(newMenu, menuItemSave, menuItemLoad, menuItemExport, menuItemExit);
     }
     
+    private void createColoringPage(Stage stage, String colorPageName) {
+        this.canvas = (new CanvasBuilder())
+                .setStage(stage)
+                .setWidth(WIDTH)
+                .setHeight(HEIGHT)
+                .setGlobalAlpha(1)
+                .setFillColor(Color.WHITE)
+                .setCs(cs)
+                .setStackPane(stackPane)
+                .setColorPageName(colorPageName)
+                .createCanvas();
+        Event.fireEvent(this.canvas, 
+                new MouseEvent(MouseEvent.MOUSE_PRESSED, 0, 0, 0, 0, 
+                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+        
+        if(Streki.debug) LOGGER.info("Adding canvas to list...");
+        this.cs = new ArrayList<Canvas>();
+        this.cs.add(this.canvas);
+        
+        if(Streki.debug) LOGGER.info("Adding cavnas to stack pane...");
+        this.stackPane.getChildren().add(this.canvas);
+    }
     
     private Canvas createCanvasPropertiesModal(Stage stage) {
 

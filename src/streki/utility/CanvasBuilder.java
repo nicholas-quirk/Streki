@@ -40,7 +40,7 @@ public class CanvasBuilder {
 
     private final static Logger LOGGER = Logger.getLogger(CanvasBuilder.class.getName());
 
-    private Canvas canvas;
+    private CustomCanvas canvas;
     private Stage stage;
     private int width;
     private int height;
@@ -50,7 +50,19 @@ public class CanvasBuilder {
     private Color fillColor;
     private double xScale;
     private double yScale;
+    private String colorPageName;
 
+    public String getColorPageName() {
+        return colorPageName;
+    }
+
+    public CanvasBuilder setColorPageName(String colorPageName) {
+        this.colorPageName = colorPageName;
+        return this;
+    }
+
+    
+    
     private void initDraw(GraphicsContext gc) {
         if (Streki.debug) LOGGER.info("CanvasBuilder -> initDraw");
 
@@ -71,7 +83,7 @@ public class CanvasBuilder {
         gc.setGlobalAlpha(globalAlpha);
 
         // TODO: Remove
-        Image image = new Image(getClass().getResourceAsStream("coloring-adult-mask.gif"));
+        Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
         gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
         //addBlur(gc);
     }
@@ -99,7 +111,7 @@ public class CanvasBuilder {
     }
     
     public Canvas createCanvas() {
-        this.canvas = new Canvas(width, height);
+        this.canvas = new CustomCanvas(width, height);
         GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
 
         initDraw(graphicsContext);
@@ -269,7 +281,7 @@ public class CanvasBuilder {
         return height;
     }
 
-    public CanvasBuilder setCanvas(Canvas canvas) {
+    public CanvasBuilder setCanvas(CustomCanvas canvas) {
         this.canvas = canvas;
         return this;
     }
