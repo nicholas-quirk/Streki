@@ -5,6 +5,7 @@
  */
 package streki.utility;
 
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.util.List;
@@ -24,11 +25,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.stage.Stage;
 import javafx.scene.image.Image;
+import javax.imageio.ImageIO;
  
 import streki.Streki;
 
@@ -40,7 +41,7 @@ public class CanvasBuilder {
 
     private final static Logger LOGGER = Logger.getLogger(CanvasBuilder.class.getName());
 
-    private CustomCanvas canvas;
+    private Canvas canvas;
     private Stage stage;
     private int width;
     private int height;
@@ -51,7 +52,18 @@ public class CanvasBuilder {
     private double xScale;
     private double yScale;
     private String colorPageName;
+    private String savedCanvasName;
 
+    public String getSavedCanvasName() {
+        return savedCanvasName;
+    }
+
+    public CanvasBuilder setSavedCanvasName(String savedCanvasName) {
+        this.savedCanvasName = savedCanvasName;
+        return this;
+    }
+
+    
     public String getColorPageName() {
         return colorPageName;
     }
@@ -76,15 +88,33 @@ public class CanvasBuilder {
             gc.setFill(this.fillColor);
             gc.fillRect(0, 0, this.width, this.height);
         }
-
+        
         gc.setLineCap(StrokeLineCap.ROUND);
         gc.setLineJoin(StrokeLineJoin.ROUND);
 
         gc.setGlobalAlpha(globalAlpha);
 
+        if(this.savedCanvasName != null) {
+            //Image image = new Image(getClass().getResourceAsStream(this.savedCanvasName));
+            //new Image(new FileInputStream("C:\\tempSave.png"));
+            try {
+            BufferedImage bufferedImage = ImageIO.read(FileManager.savedFile(this.savedCanvasName));
+            Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+            gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+            
+            } catch (Exception e) {
+                
+            }
+        }
+        
         // TODO: Remove
-        Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
-        gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+        if(this.colorPageName != null) {
+            Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
+            gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+        }
+        
+
+        
         //addBlur(gc);
     }
 
@@ -111,7 +141,7 @@ public class CanvasBuilder {
     }
     
     public Canvas createCanvas() {
-        this.canvas = new CustomCanvas(width, height);
+        this.canvas = new Canvas(width, height);
         GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
 
         initDraw(graphicsContext);
@@ -119,6 +149,7 @@ public class CanvasBuilder {
         this.canvas.setOnScroll(new EventHandler<ScrollEvent>() {
             @Override
             public void handle(ScrollEvent e) {
+                
                 double r = (e.getDeltaY() < 0) ? 1.1 : 0.9;
                 double zx = canvas.getScaleX() * r;
                 double zy = canvas.getScaleY() * r;
@@ -188,7 +219,7 @@ public class CanvasBuilder {
 
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
-                        graphicsContext.stroke();
+                        //graphicsContext.stroke();
                     }
                 });
 
@@ -210,7 +241,7 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        Image image = new Image(getClass().getResourceAsStream("coloring-adult-mask.gif"));
+                        Image image = new Image(getClass().getResourceAsStream(colorPageName));
                         graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
                                 graphicsContext.getCanvas().getHeight());
                     }
@@ -281,7 +312,7 @@ public class CanvasBuilder {
         return height;
     }
 
-    public CanvasBuilder setCanvas(CustomCanvas canvas) {
+    public CanvasBuilder setCanvas(Canvas canvas) {
         this.canvas = canvas;
         return this;
     }

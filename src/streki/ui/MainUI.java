@@ -2,15 +2,14 @@ package streki.ui;
 
 import streki.utility.CanvasBuilder;
 import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -43,6 +42,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
@@ -50,6 +50,7 @@ import javafx.stage.Stage;
 import javafx.util.Pair;
 import javax.imageio.ImageIO;
 import streki.Streki;
+import streki.utility.FileManager;
 import streki.utility.Pen;
 //import org.controlsfx.control.StatusBar;
 
@@ -60,38 +61,6 @@ import streki.utility.Pen;
  */
 public class MainUI implements Serializable {
     
-    private void readObject() {
-
-        try {
-            FileInputStream door = new FileInputStream("C:\\MyObject.ser");
-            ObjectInputStream reader = new ObjectInputStream(door);
-            this.cs = (ArrayList<cs)reader.readObject();
-            System.out.println(cs+" "+cs);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void writeObject() {
-        try {
-            // Serialize data object to a file
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("C:\\MyObject.ser"));
-            out.writeObject(this.cs);
-            out.close();
-
-            // Serialize data object to a byte array
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            out = new ObjectOutputStream(bos);
-            out.writeObject(this.cs);
-            out.close();
-
-            // Get the bytes of the serialized object
-            byte[] buf = bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private final static Logger LOGGER = Logger.getLogger(MainUI.class.getName());
     
     private static int WIDTH = 800;
@@ -110,10 +79,7 @@ public class MainUI implements Serializable {
     Color strokeColor;
     Pen pen;
     Stage stage;
-    
-    public MainUI() {
-        System.out.println("\n\n\n\n\n[%] "+this.stage);
-    }
+    RenderedImage ri;
     
     public MainUI(final Stage stage) {
         
@@ -151,6 +117,7 @@ public class MainUI implements Serializable {
         scrollPane.setContent(stackPane);
         
         if(Streki.debug) LOGGER.info("Adding scroll pane to center border...");
+        scrollPane.setPadding(new Insets(8, 8, 8, 8));
         border.setCenter(scrollPane);
         
         if(Streki.debug) LOGGER.info("Initializing color picker...");
@@ -182,13 +149,24 @@ public class MainUI implements Serializable {
             Pen.getInstance().setLineWidth(penSizeSlider.getValue());
         });
         
-        Label l = new Label("Label");
-        GridPane pg = new GridPane();
-        pg.setConstraints(l, 2, 3);
-        pg.add(colorPicker, 0, 0);
-        pg.add(penSizeSlider, 0, 1);
-        border.setRight(pg);
-
+        //Label l = new Label("Label");
+        //GridPane pg = new GridPane();
+        //pg.setConstraints(l, 2, 3);
+        //pg.add(colorPicker, 0, 0);
+        //pg.add(penSizeSlider, 0, 1);
+        //border.setRight(pg);
+        VBox controls = new VBox();
+        controls.setPadding(new Insets(8, 8, 8, 8));
+        Label colorPickerLabel = new Label("Color");
+        Label penSizeLabel = new Label("Brush Size");
+        controls.getChildren().addAll(
+                   colorPickerLabel, 
+                    colorPicker, 
+                    new Label(" "), 
+                    penSizeLabel, 
+                    penSizeSlider);
+        border.setRight(controls);
+        
         //Scene scene = new Scene(border, 800, 600);
         Scene scene = new Scene(border);
         
@@ -224,7 +202,7 @@ public class MainUI implements Serializable {
         MenuItem newMenuItem1 = new MenuItem();
         newMenuItem1.setText("Face");
         //newMenuItem1.setOnAction((ae) -> createCanvasPropertiesModal(stage));
-        newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif"));
+        newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif", null));
         newMenu.getItems().add(newMenuItem1);
         
         //MenuItem menuItemNew = new MenuItem();
@@ -234,12 +212,32 @@ public class MainUI implements Serializable {
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
         menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
-        menuItemSave.setOnAction((ae) -> writeObject());
+        menuItemSave.setOnAction((ae) -> saveRenderedImage());
         
-        MenuItem menuItemLoad = new MenuItem("_Load");
-        menuItemLoad.setMnemonicParsing(true);
-        menuItemLoad.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN));
-        menuItemLoad.setOnAction((ae) -> readObject());
+        Menu loadMenu = new Menu();
+        loadMenu.setText("Load");
+        
+        try {
+            for(String savedName : FileManager.getSavedDirListing()) {
+                
+                String savedFilePath = FileManager.savedFile(savedName).getCanonicalPath();
+                Calendar c = Calendar.getInstance();
+                c.setTimeInMillis(new Long(savedName.substring(0, savedName.indexOf("."))));
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
+                String displayName = sdf.format(c.getTime());
+                MenuItem menuItemLoad = new MenuItem(displayName);
+                menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, "coloring-adult-mask.gif", savedName));
+            
+            loadMenu.getItems().add(menuItemLoad);
+            }
+            
+        } catch (Exception e) {
+            
+        }
+        //MenuItem menuItemLoad = new MenuItem("_Load");
+        //menuItemLoad.setMnemonicParsing(true);
+        //menuItemLoad.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN));
+        //menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, "coloring-adult-mask.gif", "C:\\tempSave.png"));
         
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
@@ -286,10 +284,59 @@ public class MainUI implements Serializable {
         menuItemExit.setText("Exit");
         menuItemExit.setOnAction((ae) -> System.exit(0));
         
-        fileMenu.getItems().addAll(newMenu, menuItemSave, menuItemLoad, menuItemExport, menuItemExit);
+        fileMenu.getItems().addAll(newMenu, menuItemSave, loadMenu, menuItemExport, menuItemExit);
     }
     
-    private void createColoringPage(Stage stage, String colorPageName) {
+    public void saveRenderedImage() {
+        try {
+        Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+        
+        double priorScaleX = 1;
+        double priorScaleY = 1;
+        
+            for(Canvas cx : cs) {
+ 
+                priorScaleX = cx.getScaleX();
+                priorScaleY = cx.getScaleY();
+                        
+                // We may be zoomed in when saving...
+                cx.setScaleX(1);
+                cx.setScaleY(1);
+                
+                Event.fireEvent(cx, 
+                new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0, 
+                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                
+                WritableImage wi = new WritableImage((int)canvas.getWidth(), (int)canvas.getWidth());
+
+                SnapshotParameters sp = new SnapshotParameters();
+                sp.setFill(Color.TRANSPARENT);
+
+
+
+                c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
+            }
+
+            WritableImage writableImage = new WritableImage((int)c.getWidth(), (int)c.getHeight());
+            SnapshotParameters sp = new SnapshotParameters();
+            sp.setFill(Color.TRANSPARENT);
+            c.snapshot(sp, writableImage);
+            RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
+            
+            ImageIO.write(renderedImage, "png", FileManager.savedFile(this.canvas.getId()+".png"));
+    
+            for(Canvas cx : cs) {
+                cx.setScaleX(priorScaleX);
+                cx.setScaleY(priorScaleY);
+            }
+        
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+    }
+    
+    private void createColoringPage(Stage stage, String colorPageName, String savedCanvasName) {
         this.canvas = (new CanvasBuilder())
                 .setStage(stage)
                 .setWidth(WIDTH)
@@ -298,6 +345,7 @@ public class MainUI implements Serializable {
                 .setFillColor(Color.WHITE)
                 .setCs(cs)
                 .setStackPane(stackPane)
+                .setSavedCanvasName(savedCanvasName)
                 .setColorPageName(colorPageName)
                 .createCanvas();
         Event.fireEvent(this.canvas, 
@@ -305,10 +353,12 @@ public class MainUI implements Serializable {
                         MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
         
         if(Streki.debug) LOGGER.info("Adding canvas to list...");
+        this.canvas.setId(Calendar.getInstance().getTimeInMillis()+"");
         this.cs = new ArrayList<Canvas>();
         this.cs.add(this.canvas);
         
         if(Streki.debug) LOGGER.info("Adding cavnas to stack pane...");
+        this.stackPane.getChildren().clear();
         this.stackPane.getChildren().add(this.canvas);
     }
     
@@ -358,6 +408,33 @@ public class MainUI implements Serializable {
         stage.setHeight(c.getHeight());
 
         return c;
+    }
+    
+    private static Object cloneObject(Object obj){
+        try{
+            Object clone = obj.getClass().newInstance();
+            for (Field field : obj.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                if(field.get(obj) == null || Modifier.isFinal(field.getModifiers())){
+                    continue;
+                }
+                if(field.getType().isPrimitive() || field.getType().equals(String.class)
+                        || field.getType().getSuperclass().equals(Number.class)
+                        || field.getType().equals(Boolean.class)){
+                    field.set(clone, field.get(obj));
+                }else{
+                    Object childObj = field.get(obj);
+                    if(childObj == obj){
+                        field.set(clone, clone);
+                    }else{
+                        field.set(clone, cloneObject(field.get(obj)));
+                    }
+                }
+            }
+            return clone;
+        }catch(Exception e){
+            return null;
+        }
     }
     
 }
