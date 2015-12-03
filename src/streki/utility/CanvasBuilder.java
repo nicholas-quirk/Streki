@@ -103,14 +103,20 @@ public class CanvasBuilder {
             gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
             
             } catch (Exception e) {
-                
+                e.printStackTrace();
             }
         }
         
         // TODO: Remove
         if(this.colorPageName != null) {
-            Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
+            //Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
+            try {
+            BufferedImage bufferedImage = ImageIO.read(FileManager.colorPage(this.colorPageName));
+            Image image = SwingFXUtils.toFXImage(bufferedImage, null);
             gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         
 
@@ -241,7 +247,16 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        Image image = new Image(getClass().getResourceAsStream(colorPageName));
+                      
+                        // TODO: Keep file handle.
+                        Image image = null;
+                        try { 
+                        BufferedImage bufferedImage = ImageIO.read(FileManager.colorPage(colorPageName));
+                        image = SwingFXUtils.toFXImage(bufferedImage, null);
+                      } catch(Exception e) {
+                          e.printStackTrace();
+                      }
+//Image image = new Image(getClass().getResourceAsStream(colorPageName));
                         graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
                                 graphicsContext.getCanvas().getHeight());
                     }

@@ -5,8 +5,6 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,7 +19,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ColorPicker;
@@ -73,8 +71,9 @@ public class MainUI implements Serializable {
     //StatusBar statusBar;
     ScrollPane scrollPane;
     CustomStackPane stackPane;
-    Button testButton;
     Canvas canvas;
+    
+    // State members
     List<Canvas> cs = new ArrayList<Canvas>();
     Color strokeColor;
     Pen pen;
@@ -149,23 +148,74 @@ public class MainUI implements Serializable {
             Pen.getInstance().setLineWidth(penSizeSlider.getValue());
         });
         
-        //Label l = new Label("Label");
-        //GridPane pg = new GridPane();
-        //pg.setConstraints(l, 2, 3);
-        //pg.add(colorPicker, 0, 0);
-        //pg.add(penSizeSlider, 0, 1);
-        //border.setRight(pg);
+        VBox quickColors = new VBox();
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 102, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 102, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 102, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 102, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 153, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 153, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 153, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 153, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 204, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 204, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 204, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 204, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 255, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 255, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 255, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(102, 255, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 102, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 102, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 102, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 102, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 153, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 153, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 153, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 153, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 204, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 204, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 204, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 204, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 255, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 255, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 255, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(153, 255, 255, 1), colorPicker));
+ 
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 102, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 102, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 102, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 102, 255, 1), colorPicker));
+        
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 153, 102, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 153, 153, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 153, 204, 1), colorPicker));
+        quickColors.getChildren().add(createQuickColorCanvas(Color.rgb(204, 153, 255, 1), colorPicker));
+        
+        ScrollPane quickColorsScrollPane = new ScrollPane(quickColors);
+        quickColorsScrollPane.setMaxHeight(100);
+        
         VBox controls = new VBox();
         controls.setPadding(new Insets(8, 8, 8, 8));
         Label colorPickerLabel = new Label("Color");
         Label penSizeLabel = new Label("Brush Size");
         controls.getChildren().addAll(
-                   colorPickerLabel, 
-                    colorPicker, 
-                    new Label(" "), 
-                    penSizeLabel, 
-                    penSizeSlider);
+            colorPickerLabel, 
+            colorPicker, 
+            new Label(" "), 
+            penSizeLabel, 
+            penSizeSlider,
+            quickColorsScrollPane);
         border.setRight(controls);
+        
+
         
         //Scene scene = new Scene(border, 800, 600);
         Scene scene = new Scene(border);
@@ -181,7 +231,6 @@ public class MainUI implements Serializable {
         stage.setHeight(primaryScreenBounds.getHeight());
 
         stage.show();
-        
     }
     
     private void createFileMenu(final Stage stage) {
@@ -201,14 +250,9 @@ public class MainUI implements Serializable {
         
         MenuItem newMenuItem1 = new MenuItem();
         newMenuItem1.setText("Face");
-        //newMenuItem1.setOnAction((ae) -> createCanvasPropertiesModal(stage));
         newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif", null));
         newMenu.getItems().add(newMenuItem1);
         
-        //MenuItem menuItemNew = new MenuItem();
-        //menuItemNew.setText("New");
-        //menuItemNew.setOnAction((ae) -> createCanvasPropertiesModal(stage));
-
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
         menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
@@ -219,26 +263,18 @@ public class MainUI implements Serializable {
         
         try {
             for(String savedName : FileManager.getSavedDirListing()) {
-                
-                String savedFilePath = FileManager.savedFile(savedName).getCanonicalPath();
                 Calendar c = Calendar.getInstance();
                 c.setTimeInMillis(new Long(savedName.substring(0, savedName.indexOf("."))));
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
                 String displayName = sdf.format(c.getTime());
                 MenuItem menuItemLoad = new MenuItem(displayName);
                 menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, "coloring-adult-mask.gif", savedName));
-            
-            loadMenu.getItems().add(menuItemLoad);
+                loadMenu.getItems().add(menuItemLoad);
             }
-            
         } catch (Exception e) {
-            
+            e.printStackTrace();
         }
-        //MenuItem menuItemLoad = new MenuItem("_Load");
-        //menuItemLoad.setMnemonicParsing(true);
-        //menuItemLoad.setAccelerator(new KeyCodeCombination(KeyCode.L, KeyCombination.SHORTCUT_DOWN));
-        //menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, "coloring-adult-mask.gif", "C:\\tempSave.png"));
-        
+
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
         menuItemExport.setOnAction((ae) -> {
@@ -289,51 +325,47 @@ public class MainUI implements Serializable {
     
     public void saveRenderedImage() {
         try {
-        Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
-        
-        double priorScaleX = 1;
-        double priorScaleY = 1;
-        
-            for(Canvas cx : cs) {
- 
+            Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+
+            double priorScaleX = 1;
+            double priorScaleY = 1;
+
+            for (Canvas cx : cs) {
+
                 priorScaleX = cx.getScaleX();
                 priorScaleY = cx.getScaleY();
-                        
+
                 // We may be zoomed in when saving...
                 cx.setScaleX(1);
                 cx.setScaleY(1);
-                
-                Event.fireEvent(cx, 
-                new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0, 
-                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
-                
-                WritableImage wi = new WritableImage((int)canvas.getWidth(), (int)canvas.getWidth());
+
+                Event.fireEvent(cx,
+                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+
+                WritableImage wi = new WritableImage((int) canvas.getWidth(), (int) canvas.getWidth());
 
                 SnapshotParameters sp = new SnapshotParameters();
                 sp.setFill(Color.TRANSPARENT);
 
-
-
                 c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
             }
 
-            WritableImage writableImage = new WritableImage((int)c.getWidth(), (int)c.getHeight());
+            WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
             SnapshotParameters sp = new SnapshotParameters();
             sp.setFill(Color.TRANSPARENT);
             c.snapshot(sp, writableImage);
             RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
+            ImageIO.write(renderedImage, "png", FileManager.savedFile(this.canvas.getId() + ".png"));
             
-            ImageIO.write(renderedImage, "png", FileManager.savedFile(this.canvas.getId()+".png"));
-    
-            for(Canvas cx : cs) {
+            for (Canvas cx : cs) {
                 cx.setScaleX(priorScaleX);
                 cx.setScaleY(priorScaleY);
             }
-        
         } catch (Exception e) {
             e.printStackTrace();
         }
-    
+
     }
     
     private void createColoringPage(Stage stage, String colorPageName, String savedCanvasName) {
@@ -410,31 +442,28 @@ public class MainUI implements Serializable {
         return c;
     }
     
-    private static Object cloneObject(Object obj){
-        try{
-            Object clone = obj.getClass().newInstance();
-            for (Field field : obj.getClass().getDeclaredFields()) {
-                field.setAccessible(true);
-                if(field.get(obj) == null || Modifier.isFinal(field.getModifiers())){
-                    continue;
-                }
-                if(field.getType().isPrimitive() || field.getType().equals(String.class)
-                        || field.getType().getSuperclass().equals(Number.class)
-                        || field.getType().equals(Boolean.class)){
-                    field.set(clone, field.get(obj));
-                }else{
-                    Object childObj = field.get(obj);
-                    if(childObj == obj){
-                        field.set(clone, clone);
-                    }else{
-                        field.set(clone, cloneObject(field.get(obj)));
+    
+    
+        
+    public Canvas createQuickColorCanvas(Color color, ColorPicker colorPicker) {
+        Canvas c = new Canvas(100, 20);
+        GraphicsContext gc = c.getGraphicsContext2D();
+
+        gc.setFill(color);
+        gc.fillRect(0, 0, 100, 20);
+
+
+        c.addEventHandler(MouseEvent.MOUSE_PRESSED,
+                new EventHandler<MouseEvent>() {
+
+                    @Override
+                    public void handle(MouseEvent event) {
+                        Pen.getInstance().setStrokeColor(color);
+                        colorPicker.setValue(color);
                     }
-                }
-            }
-            return clone;
-        }catch(Exception e){
-            return null;
-        }
+                });
+        
+       return c;
     }
     
 }

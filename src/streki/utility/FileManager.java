@@ -15,27 +15,36 @@ import java.util.Arrays;
  */
 public class FileManager {
 
-    
     public static ArrayList<String> getSavedDirListing() {
         ArrayList<String> names = null;
         try {
-        File f = new File("./saved");
-        names = new ArrayList<String>(Arrays.asList(f.list()));
-        System.out.println(names.get(0));
+            File f = new File("./saved");
+            names = new ArrayList<String>(Arrays.asList(f.list()));
+            System.out.println(names.get(0));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return names;
     }
-    
-    public static File savedFile(String filename) {
+
+    public static File colorPage(String filename) {
         File f = null;
         try {
-        f = new File("./saved", filename);
-        } catch(Exception e) {
+            f = new File("./resources/images", filename);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return f;
     }
-    
+
+    public static File savedFile(String filename) {
+        File f = null;
+        try {
+            f = new File("./saved", filename);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return f;
+    }
+
 }
