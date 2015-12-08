@@ -23,7 +23,7 @@ public class Pen {
 
     public static Pen getInstance() {
         
-        if(Streki.debug) LOGGER.info("Returning new Pen instance...");
+        if(Streki.debugStreki) LOGGER.info("Returning new Pen instance...");
         
         if (instance == null) {
             instance = new Pen();

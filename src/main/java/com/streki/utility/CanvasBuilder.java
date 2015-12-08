@@ -29,9 +29,9 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.stage.Stage;
 import javafx.scene.image.Image;
-import javax.imageio.ImageIO;
- 
+
 import com.streki.Streki;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -63,7 +63,6 @@ public class CanvasBuilder {
         return this;
     }
 
-    
     public String getColorPageName() {
         return colorPageName;
     }
@@ -73,10 +72,10 @@ public class CanvasBuilder {
         return this;
     }
 
-    
-    
     private void initDraw(GraphicsContext gc) {
-        if (Streki.debug) LOGGER.info("CanvasBuilder -> initDraw");
+        if (Streki.debugStreki) {
+            LOGGER.info("CanvasBuilder -> initDraw");
+        }
 
         double canvasWidth = gc.getCanvas().getWidth();
         double canvasHeight = gc.getCanvas().getHeight();
@@ -88,64 +87,34 @@ public class CanvasBuilder {
             gc.setFill(this.fillColor);
             gc.fillRect(0, 0, this.width, this.height);
         }
-        
+
         gc.setLineCap(StrokeLineCap.ROUND);
         gc.setLineJoin(StrokeLineJoin.ROUND);
 
         gc.setGlobalAlpha(globalAlpha);
 
-        if(this.savedCanvasName != null) {
-            //Image image = new Image(getClass().getResourceAsStream(this.savedCanvasName));
-            //new Image(new FileInputStream("C:\\tempSave.png"));
+        if (this.savedCanvasName != null) {
+
             try {
-            BufferedImage bufferedImage = ImageIO.read(FileManager.savedFile(this.savedCanvasName));
-            Image image = SwingFXUtils.toFXImage(bufferedImage, null);
-            gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
-            
+                BufferedImage bufferedImage = ImageIO.read((new FileManager()).savedFile(this.savedCanvasName));
+                Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
-        // TODO: Remove
-        if(this.colorPageName != null) {
-            //Image image = new Image(getClass().getResourceAsStream(this.colorPageName));
+
+        if (this.colorPageName != null) {
             try {
-            BufferedImage bufferedImage = ImageIO.read(FileManager.colorPage(this.colorPageName));
-            Image image = SwingFXUtils.toFXImage(bufferedImage, null);
-            gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+                Image image = FileManager.colorPage(this.colorPageName);
+                gc.drawImage(image, 0, 0, canvasWidth, canvasHeight);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
-
-        
-        //addBlur(gc);
     }
 
-    private void addBlur(GraphicsContext gc) {
-
-        // A bit more like paint
-        BoxBlur bb = new BoxBlur();
-        bb.setWidth(Pen.getInstance().getLineWidth());
-        bb.setHeight(Pen.getInstance().getLineWidth());
-        bb.setIterations(0);
-        gc.setEffect(bb);
-
-        // Caligraphy pen
-        //MotionBlur mb = new MotionBlur();
-        //mb.setRadius(15.0f);
-        //mb.setAngle(45.0f);
-        //gc.setEffect(mb);
-        // Looks like paint or a marker
-        //gc.setEffect(new GaussianBlur());
-        // Very jagged.
-        //Bloom bloom = new Bloom();
-        //bloom.setThreshold(1.0);
-        //gc.setEffect(bloom);
-    }
-    
     public Canvas createCanvas() {
         this.canvas = new Canvas(width, height);
         GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
@@ -155,56 +124,56 @@ public class CanvasBuilder {
         this.canvas.setOnScroll(new EventHandler<ScrollEvent>() {
             @Override
             public void handle(ScrollEvent e) {
-                
+
                 double r = (e.getDeltaY() < 0) ? 1.1 : 0.9;
                 double zx = canvas.getScaleX() * r;
                 double zy = canvas.getScaleY() * r;
 
                 xScale = zx;
                 yScale = zy;
-                
+
                 canvas.setScaleX(zx);
                 canvas.setScaleY(zy);
-                
-                Event.fireEvent(canvas, 
-                new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0, 
-                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+
+                Event.fireEvent(canvas,
+                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
             }
         });
-        
+
         this.canvas.setOnMouseExited(new EventHandler<MouseEvent>() {
 
             @Override
             public void handle(MouseEvent event) {
                 Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
             }
-            
+
         });
-        
+
         this.canvas.setOnMouseEntered(new EventHandler<MouseEvent>() {
-            
+
             @Override
             public void handle(MouseEvent event) {
                 try {
-                    if(Pen.getInstance().getLineWidth() * xScale > 9) {
+                    if (Pen.getInstance().getLineWidth() * xScale > 9) {
                         // When we zoom in we want the marker tip to increase.
-                        Canvas canvas = new Canvas((Pen.getInstance().getLineWidth() * xScale), (Pen.getInstance().getLineWidth()  * yScale));
-                        canvas.getGraphicsContext2D().setFill(((Color)Pen.getInstance().getStrokeColor()).darker());
-                        
+                        Canvas canvas = new Canvas((Pen.getInstance().getLineWidth() * xScale), (Pen.getInstance().getLineWidth() * yScale));
+                        canvas.getGraphicsContext2D().setFill(((Color) Pen.getInstance().getStrokeColor()).darker());
+
                         // Create a rectangle and write is to disk.
                         canvas.getGraphicsContext2D().fillRect(0, 0, Pen.getInstance().getLineWidth() * xScale, Pen.getInstance().getLineWidth() * yScale);
-                        WritableImage writableImage = new WritableImage((int)canvas.getWidth(), (int)canvas.getHeight());
+                        WritableImage writableImage = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
                         SnapshotParameters sp = new SnapshotParameters();
                         sp.setFill(Color.TRANSPARENT);
                         canvas.snapshot(sp, writableImage);
                         RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
                         javax.imageio.ImageIO.write(renderedImage, "png", new File("./cursor.png"));
                         String path = new File(".").getCanonicalPath();
-                        Image image = new Image("file:///"+path+"/cursor.png");
-                        
+                        Image image = new Image("file:///" + path + "/cursor.png");
+
                         Streki.getPrimaryStage().getScene().setCursor(new ImageCursor(image,
-                                    image.getWidth() / 2,
-                                    image.getHeight() /2));
+                                image.getWidth() / 2,
+                                image.getHeight() / 2));
                     } else {
                         Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
                     }
@@ -212,7 +181,7 @@ public class CanvasBuilder {
                     e.printStackTrace();
                 }
             }
-            
+
         });
 
         this.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
@@ -225,7 +194,6 @@ public class CanvasBuilder {
 
                         graphicsContext.beginPath();
                         graphicsContext.moveTo(event.getX(), event.getY());
-                        //graphicsContext.stroke();
                     }
                 });
 
@@ -247,38 +215,24 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                      
+
                         // TODO: Keep file handle.
                         Image image = null;
-                        try { 
-                        BufferedImage bufferedImage = ImageIO.read(FileManager.colorPage(colorPageName));
-                        image = SwingFXUtils.toFXImage(bufferedImage, null);
-                      } catch(Exception e) {
-                          e.printStackTrace();
-                      }
-//Image image = new Image(getClass().getResourceAsStream(colorPageName));
+                        try {
+                            image = FileManager.colorPage(colorPageName);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
                                 graphicsContext.getCanvas().getHeight());
+                        
+
                     }
 
                 });
-
-        /**
-         * this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new
-         * EventHandler<MouseEvent>() {
-         *
-         * @Override public void handle(MouseEvent event) {
-         *
-         * Canvas cx = (new CanvasBuilder()).setStage(stage) .setWidth((int)
-         * canvas.getWidth()) .setHeight((int) canvas.getHeight())
-         * .setGlobalAlpha(canvas.getGraphicsContext2D().getGlobalAlpha())
-         * .setCs(cs) .setStackPane(stackPane) .createCanvas(); cs.add(cx);
-         * stackPane.getChildren().add(cx); } });
-          *
-         */
         return this.canvas;
     }
-    
+
     public Color getFillColor() {
         return fillColor;
     }
@@ -350,5 +304,5 @@ public class CanvasBuilder {
     public Canvas getCanvas() {
         return this.canvas;
     }
-    
+
 }

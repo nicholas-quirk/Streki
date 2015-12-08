@@ -8,7 +8,7 @@ package com.streki.utility;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.naming.spi.DirectoryManager;
+import javafx.scene.image.Image;
 
 /**
  *
@@ -16,12 +16,12 @@ import javax.naming.spi.DirectoryManager;
  */
 public class FileManager {
 
-    public static ArrayList<String> getSavedDirListing() {
+    // java.vendor      Human-readable VM vendor            The Android Project 
+    // user.dir or java.io.tmpdir for Android
+    
+    public ArrayList<String> getSavedDirListing() {
         ArrayList<String> names = null;
         try {
-            //File f = new File("./saved");
-            // File.separator 
-            
             if((new java.io.File(System.getProperty("user.home"), "Streki")).exists() == false) {
                 new java.io.File(System.getProperty("user.home"), "Streki").mkdirs();
                 new java.io.File(System.getProperty("user.home") + File.separator + "Streki", "saved").mkdirs();
@@ -36,17 +36,17 @@ public class FileManager {
         return names;
     }
 
-    public static File colorPage(String filename) {
-        File f = null;
+    public static Image colorPage(String filename) {
+        Image f = null;
         try {
-            f = new File("./resources/images", filename);
+            f = new Image(FileManager.class.getResourceAsStream("/coloring_pages/"+filename));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return f;
     }
 
-    public static File savedFile(String filename) {
+    public File savedFile(String filename) {
         File f = null;
         try {
             f = new File(System.getProperty("user.home") + File.separator + "Streki" + File.separator + "saved", filename);

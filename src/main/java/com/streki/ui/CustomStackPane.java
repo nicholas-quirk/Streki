@@ -25,7 +25,7 @@ public class CustomStackPane extends StackPane {
         setOnMousePressed((event) -> {
             pressedX = event.getX();
             pressedY = event.getY();
-            if(Streki.debug) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
+            if(Streki.debugStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
         });
 
         setOnMouseDragged((event) -> {
@@ -33,7 +33,7 @@ public class CustomStackPane extends StackPane {
                 setTranslateX(getTranslateX() + event.getX() - pressedX);
                 setTranslateY(getTranslateY() + event.getY() - pressedY);
                 event.consume();
-                if(Streki.debug) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
+                if(Streki.debugStreki) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
                         (getTranslateX() + event.getX() - pressedX)+"y: " +
                         (getTranslateY() + event.getY() - pressedY));
             }
