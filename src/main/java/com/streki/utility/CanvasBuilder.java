@@ -1,8 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// Copyright 2015, Nicholas Quirk, All rights reserved.
+
 package com.streki.utility;
 
 import java.awt.image.BufferedImage;
@@ -31,6 +28,7 @@ import javafx.stage.Stage;
 import javafx.scene.image.Image;
 
 import com.streki.Streki;
+import javafx.scene.image.PixelReader;
 import javax.imageio.ImageIO;
 
 /**
@@ -167,9 +165,8 @@ public class CanvasBuilder {
                         sp.setFill(Color.TRANSPARENT);
                         canvas.snapshot(sp, writableImage);
                         RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-                        javax.imageio.ImageIO.write(renderedImage, "png", new File("./cursor.png"));
-                        String path = new File(".").getCanonicalPath();
-                        Image image = new Image("file:///" + path + "/cursor.png");
+                        javax.imageio.ImageIO.write(renderedImage, "png", new File(FileManager.baseUserDirectory, "cursor.png"));
+                        Image image = new Image("file:///" + (new File(FileManager.baseUserDirectory, "cursor.png")).getAbsolutePath());
 
                         Streki.getPrimaryStage().getScene().setCursor(new ImageCursor(image,
                                 image.getWidth() / 2,
@@ -189,11 +186,19 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        graphicsContext.setStroke(Pen.getInstance().getStrokeColor());
-                        graphicsContext.setLineWidth(Pen.getInstance().getLineWidth());
+                        
+                        Pen.getInstance().setHorizontalPos(event.getX());
+                        Pen.getInstance().setVerticalPos(event.getY());
+                        
+                        if(Pen.getInstance().penMode == PenMode.COLOR) {
+                            graphicsContext.setStroke(Pen.getInstance().getStrokeColor());
+                            graphicsContext.setLineWidth(Pen.getInstance().getLineWidth());
 
-                        graphicsContext.beginPath();
-                        graphicsContext.moveTo(event.getX(), event.getY());
+                            graphicsContext.beginPath();
+                            graphicsContext.moveTo(event.getX(), event.getY());
+                        } else if (Pen.getInstance().penMode == PenMode.PICKER) {
+                            getPixelColor();
+                        }
                     }
                 });
 
@@ -202,14 +207,14 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        if (event.getButton() == MouseButton.PRIMARY) {
+                        if (event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
                             graphicsContext.lineTo(event.getX(), event.getY());
                             graphicsContext.stroke();
                             event.consume();
                         }
                     }
                 });
-
+        
         this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
                 new EventHandler<MouseEvent>() {
 
@@ -303,6 +308,22 @@ public class CanvasBuilder {
 
     public Canvas getCanvas() {
         return this.canvas;
+    }
+    
+    public void getPixelColor() {
+        try {
+            Canvas c = this.canvas;
+
+            WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
+            SnapshotParameters sp = new SnapshotParameters();
+            sp.setFill(Color.TRANSPARENT);
+            c.snapshot(sp, writableImage);
+            PixelReader pr = writableImage.getPixelReader();
+            Color color = pr.getColor((int)Pen.getInstance().getHorizontalPos(), (int)Pen.getInstance().getVerticalPos());
+            System.out.println(color);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

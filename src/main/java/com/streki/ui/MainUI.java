@@ -1,3 +1,5 @@
+// Copyright 2015, Nicholas Quirk, All rights reserved.
+
 package com.streki.ui;
 
 import com.streki.utility.CanvasBuilder;
@@ -42,8 +44,12 @@ import javax.imageio.ImageIO;
 import com.streki.Streki;
 import com.streki.utility.FileManager;
 import com.streki.utility.Pen;
+import com.streki.utility.PenMode;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-//import org.controlsfx.control.StatusBar;
+import javafx.scene.image.PixelReader;
 
 
 /**
@@ -60,8 +66,8 @@ public class MainUI {
     // GUI members.
     MenuBar menuBar;
     Menu fileMenu;
+    Menu helpMenu;
     BorderPane border;
-    //StatusBar statusBar;
     ScrollPane scrollPane;
     CustomStackPane stackPane;
     Canvas canvas;
@@ -86,8 +92,12 @@ public class MainUI {
         pen.setStrokeColor(Color.RED);
         
         if(Streki.debugStreki) LOGGER.info("Initializing menu options...");
-        createFileMenu(stage);
+        createFileMenu();
         createFileMenuChoices(stage);
+        
+        if(Streki.debugStreki) LOGGER.info("Initializing help options...");
+        createHelpMenu();
+        createHelpMenuChoices();
         
         if(Streki.debugStreki) LOGGER.info("Initializing BorderPane...");
         border = new BorderPane();
@@ -123,19 +133,34 @@ public class MainUI {
 
         if(Streki.debugStreki) LOGGER.info("Adding quick colors to scroll pane...");
         ScrollPane quickColorsScrollPane = new ScrollPane(quickColors);
-        quickColorsScrollPane.setMaxHeight(800);
+        quickColorsScrollPane.setMaxHeight(600);
         
         if(Streki.debugStreki) LOGGER.info("Adding controls to right panel...");
         VBox controls = new VBox();
-        controls.setPadding(new Insets(8, 8, 8, 8));
-        Label colorPickerLabel = new Label("Color");
-        Label penSizeLabel = new Label("Brush Size");
+        controls.setPadding(new Insets(8, 8, 32, 8));
+        Label colorPickerLabel = new Label("Custom Color");
+        Label penSizeLabel = new Label("Crayon Size");
+        
+        Button colorDropperButton = new Button();
+        colorDropperButton.setText("Color Selector");
+        colorDropperButton.setOnAction(new EventHandler() {
+            public void handle(Event event) {
+                Pen.getInstance().penMode = PenMode.PICKER;
+            }
+        });
+        
         controls.getChildren().addAll(
             colorPickerLabel, 
-            colorPicker, 
-            new Label(" "), 
+            colorPicker,
+            new Label(" "),
+            
+            colorDropperButton, 
+            new Label(" "),
+            
             penSizeLabel, 
             penSizeSlider,
+            new Label(" "),
+            
             quickColorsScrollPane);
         border.setRight(controls);
 
@@ -275,13 +300,55 @@ public class MainUI {
         });
     }
     
-    private void createFileMenu(final Stage stage) {
+    private void createFileMenu() {
         if(Streki.debugStreki) LOGGER.info("Creating file menu...");
         fileMenu = new Menu("File");
-
+        
         menuBar = new MenuBar();
         menuBar.prefWidthProperty().bind(stage.widthProperty());
         menuBar.getMenus().add(fileMenu);
+    }
+    
+    private void createHelpMenu() {
+        if(Streki.debugStreki) LOGGER.info("Creating about menu...");
+        helpMenu = new Menu("Help");
+        
+        menuBar.getMenus().add(helpMenu);
+    }
+    
+    private void createHelpMenuChoices() {
+        MenuItem aboutMenuItem = new MenuItem();
+        aboutMenuItem.setText("About");
+        aboutMenuItem.setOnAction((ae) -> {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("About");
+            alert.setHeaderText("Author: Nicholas Quirk");
+            alert.setContentText("Streki is the product of curiousity and a labor of love."
+                    + "\n\nResearch has shown that coloring reduces stress in adults."
+                    + "\n\nThis is open source software: [enter github url]"
+                    + "\n\nIf you would like donated money to a passionate programmer: [paypal url]"
+                    + "\n\nIf you would like to feature a coloring page or just contact me: nmquirk@gmail.com");
+            alert.showAndWait();
+        });
+        
+        MenuItem howToMenuItem = new MenuItem();
+        howToMenuItem.setText("How To");
+        howToMenuItem.setOnAction((ae) -> {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("How To");
+            alert.setHeaderText("Using Streki");
+            alert.setContentText("Streki is best used with a table PC and stylus, although you can use it with a desktop or laptop and mouse just fine."
+                    + "\n\nLoad coloring pictures from the File -> New option."
+                    + "\n\nClick on a crayon to select a color or use the color picker to find something else."
+                    + "\n\nClick and drag to start coloring."
+                    + "\n\nYou can save and load colorings for later."
+                    + "\n\nYou can export your artwork, print it and put it on the fridge."
+            );
+            alert.showAndWait();
+        });
+        
+        helpMenu.getItems().add(aboutMenuItem);
+        helpMenu.getItems().add(howToMenuItem);
     }
     
     private void createFileMenuChoices(final Stage stage) {

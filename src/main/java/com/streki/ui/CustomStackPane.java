@@ -1,3 +1,5 @@
+// Copyright 2015, Nicholas Quirk, All rights reserved.
+
 package com.streki.ui;
 
 import java.util.logging.Logger;
@@ -25,7 +27,7 @@ public class CustomStackPane extends StackPane {
         setOnMousePressed((event) -> {
             pressedX = event.getX();
             pressedY = event.getY();
-            if(Streki.debugStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
+            if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
         });
 
         setOnMouseDragged((event) -> {
@@ -33,7 +35,7 @@ public class CustomStackPane extends StackPane {
                 setTranslateX(getTranslateX() + event.getX() - pressedX);
                 setTranslateY(getTranslateY() + event.getY() - pressedY);
                 event.consume();
-                if(Streki.debugStreki) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
+                if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
                         (getTranslateX() + event.getX() - pressedX)+"y: " +
                         (getTranslateY() + event.getY() - pressedY));
             }

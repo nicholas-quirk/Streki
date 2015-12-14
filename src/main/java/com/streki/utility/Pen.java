@@ -1,3 +1,5 @@
+// Copyright 2015, Nicholas Quirk, All rights reserved.
+
 package com.streki.utility;
 
 import java.util.logging.Logger;
@@ -16,6 +18,10 @@ public class Pen {
 
     private Paint strokeColor;
     private double lineWidth;
+    private double verticalPos;
+    private double horizontalPos;
+    
+    public PenMode penMode = PenMode.COLOR;
 
     protected Pen() {
         // Exists only to defeat instantiation.
@@ -46,6 +52,22 @@ public class Pen {
 
     public void setLineWidth(double lineWidth) {
         this.lineWidth = lineWidth;
+    }
+
+    public double getVerticalPos() {
+        return verticalPos;
+    }
+
+    public void setVerticalPos(double verticalPos) {
+        this.verticalPos = verticalPos;
+    }
+
+    public double getHorizontalPos() {
+        return horizontalPos;
+    }
+
+    public void setHorizontalPos(double horizontalPos) {
+        this.horizontalPos = horizontalPos;
     }
 
 }
