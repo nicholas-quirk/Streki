@@ -81,6 +81,10 @@ public class MainUI {
     Pen pen;
     Stage stage;
     RenderedImage ri;
+
+    public ColorPicker getColorPicker() {
+        return this.colorPicker;
+    }
     
     public MainUI(final Stage stage) {
         
@@ -145,7 +149,8 @@ public class MainUI {
         colorDropperButton.setText("Color Selector");
         colorDropperButton.setOnAction(new EventHandler() {
             public void handle(Event event) {
-                Pen.getInstance().penMode = PenMode.PICKER;
+                //Pen.getInstance().penMode = PenMode.PICKER;
+                Pen.getInstance().setStrokeColor(Color.TRANSPARENT);
             }
         });
         
@@ -487,6 +492,7 @@ public class MainUI {
                 .setStackPane(stackPane)
                 .setSavedCanvasName(savedCanvasName)
                 .setColorPageName(colorPageName)
+                .setMainUI(this)
                 .createCanvas();
         Event.fireEvent(this.canvas, 
                 new MouseEvent(MouseEvent.MOUSE_PRESSED, 0, 0, 0, 0, 

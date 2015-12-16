@@ -15,7 +15,6 @@ import javafx.scene.ImageCursor;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -28,6 +27,7 @@ import javafx.stage.Stage;
 import javafx.scene.image.Image;
 
 import com.streki.Streki;
+import com.streki.ui.MainUI;
 import javafx.scene.image.PixelReader;
 import javax.imageio.ImageIO;
 
@@ -51,6 +51,16 @@ public class CanvasBuilder {
     private double yScale;
     private String colorPageName;
     private String savedCanvasName;
+    private MainUI mainUI;
+
+    public MainUI getMainUI() {
+        return mainUI;
+    }
+
+    public CanvasBuilder setMainUI(MainUI mainUI) {
+        this.mainUI = mainUI;
+        return this;
+    }
 
     public String getSavedCanvasName() {
         return savedCanvasName;
@@ -197,7 +207,9 @@ public class CanvasBuilder {
                             graphicsContext.beginPath();
                             graphicsContext.moveTo(event.getX(), event.getY());
                         } else if (Pen.getInstance().penMode == PenMode.PICKER) {
-                            getPixelColor();
+                            Color color = getPixelColor();
+                            mainUI.getColorPicker().setValue(color);
+                            //graphicsContext.getPixelWriter().getPixelFormat().getArgb(null, width, width, width);
                         }
                     }
                 });
@@ -310,20 +322,25 @@ public class CanvasBuilder {
         return this.canvas;
     }
     
-    public void getPixelColor() {
+    public Color getPixelColor() {
         try {
             Canvas c = this.canvas;
 
             WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
             SnapshotParameters sp = new SnapshotParameters();
-            sp.setFill(Color.TRANSPARENT);
+            //sp.setFill(Color.TRANSPARENT);
             c.snapshot(sp, writableImage);
             PixelReader pr = writableImage.getPixelReader();
-            Color color = pr.getColor((int)Pen.getInstance().getHorizontalPos(), (int)Pen.getInstance().getVerticalPos());
-            System.out.println(color);
+            Color color = pr.getColor((int)(Pen.getInstance().getHorizontalPos() * c.getScaleX()), 
+                    (int)(Pen.getInstance().getVerticalPos() * c.getScaleY()));
+            //System.out.println(color);
+            
+            return color;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+        return null;
     }
 
 }
