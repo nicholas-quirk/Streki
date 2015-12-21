@@ -30,17 +30,6 @@ public class Streki extends Application {
         if(debugStreki) LOGGER.info("Starting application...");
         Streki.primaryStage = primaryStage;
         this.ui = new MainUI(primaryStage);
-        
-        /**
-        Thread t = new Thread(null, null, "TT", 1000000) {
-            @Override
-            public void run() {
-                System.out.println("HELLO WORLD!");
-            }
-
-        };
-        t.start();
-        **/
     }
 
     /**

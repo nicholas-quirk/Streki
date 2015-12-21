@@ -28,7 +28,11 @@ import javafx.scene.image.Image;
 
 import com.streki.Streki;
 import com.streki.ui.MainUI;
+import com.streki.ui.RenderedCanvas;
+import java.util.ArrayList;
 import javafx.scene.image.PixelReader;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javax.imageio.ImageIO;
 
 /**
@@ -52,33 +56,7 @@ public class CanvasBuilder {
     private String colorPageName;
     private String savedCanvasName;
     private MainUI mainUI;
-
-    public MainUI getMainUI() {
-        return mainUI;
-    }
-
-    public CanvasBuilder setMainUI(MainUI mainUI) {
-        this.mainUI = mainUI;
-        return this;
-    }
-
-    public String getSavedCanvasName() {
-        return savedCanvasName;
-    }
-
-    public CanvasBuilder setSavedCanvasName(String savedCanvasName) {
-        this.savedCanvasName = savedCanvasName;
-        return this;
-    }
-
-    public String getColorPageName() {
-        return colorPageName;
-    }
-
-    public CanvasBuilder setColorPageName(String colorPageName) {
-        this.colorPageName = colorPageName;
-        return this;
-    }
+    List<RenderedCanvas> renderedCaseStack = new ArrayList<RenderedCanvas>();
 
     private void initDraw(GraphicsContext gc) {
         if (Streki.debugStreki) {
@@ -197,19 +175,17 @@ public class CanvasBuilder {
                     @Override
                     public void handle(MouseEvent event) {
                         
-                        Pen.getInstance().setHorizontalPos(event.getX());
-                        Pen.getInstance().setVerticalPos(event.getY());
+                        // Save current instance of canvas
+                        saveCanvas();
                         
+                        //Pen.getInstance().setHorizontalPos(event.getX());
+                        //Pen.getInstance().setVerticalPos(event.getY());
                         if(Pen.getInstance().penMode == PenMode.COLOR) {
                             graphicsContext.setStroke(Pen.getInstance().getStrokeColor());
                             graphicsContext.setLineWidth(Pen.getInstance().getLineWidth());
 
                             graphicsContext.beginPath();
                             graphicsContext.moveTo(event.getX(), event.getY());
-                        } else if (Pen.getInstance().penMode == PenMode.PICKER) {
-                            Color color = getPixelColor();
-                            mainUI.getColorPicker().setValue(color);
-                            //graphicsContext.getPixelWriter().getPixelFormat().getArgb(null, width, width, width);
                         }
                     }
                 });
@@ -219,6 +195,7 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
+                        
                         if (event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
                             graphicsContext.lineTo(event.getX(), event.getY());
                             graphicsContext.stroke();
@@ -232,7 +209,9 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
+                        
 
+                        
                         // TODO: Keep file handle.
                         Image image = null;
                         try {
@@ -240,6 +219,8 @@ public class CanvasBuilder {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        
+                        // Draws the coloring page on top
                         graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
                                 graphicsContext.getCanvas().getHeight());
                         
@@ -247,9 +228,53 @@ public class CanvasBuilder {
                     }
 
                 });
+        
+        
+        this.canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+
+                  @Override
+                  public void handle(KeyEvent t) {
+                    if((t.getCode() == KeyCode.Z) && t.isControlDown())
+                    {
+                        undoCanvas();
+                        //Event.fireEvent(canvas,t);
+                        //new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                        //        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                        t.consume();
+                    }
+                  }
+              });
+        
         return this.canvas;
     }
+    
+    public MainUI getMainUI() {
+        return mainUI;
+    }
 
+    public CanvasBuilder setMainUI(MainUI mainUI) {
+        this.mainUI = mainUI;
+        return this;
+    }
+
+    public String getSavedCanvasName() {
+        return savedCanvasName;
+    }
+
+    public CanvasBuilder setSavedCanvasName(String savedCanvasName) {
+        this.savedCanvasName = savedCanvasName;
+        return this;
+    }
+
+    public String getColorPageName() {
+        return colorPageName;
+    }
+
+    public CanvasBuilder setColorPageName(String colorPageName) {
+        this.colorPageName = colorPageName;
+        return this;
+    }
+    
     public Color getFillColor() {
         return fillColor;
     }
@@ -322,25 +347,82 @@ public class CanvasBuilder {
         return this.canvas;
     }
     
-    public Color getPixelColor() {
-        try {
-            Canvas c = this.canvas;
+    private void undoCanvas() {
+        System.out.println("REMOVING...");
+        RenderedCanvas rc = this.renderedCaseStack.remove(this.renderedCaseStack.size()-1);
+        this.canvas.getGraphicsContext2D().drawImage(rc.getWritableImage(), 0, 0, rc.getCanvasSizeWidth(), rc.getCanvasSizeHeight());
+ 
+        // DUPLICATE CODE!!!
+        GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
+        // TODO: Keep file handle.
+
+    Image image = null;
+    try {
+        image = FileManager.colorPage(colorPageName);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    // Draws the coloring page on top
+    graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
+            graphicsContext.getCanvas().getHeight());               
+
+    }
+    
+    private void saveCanvas() {
+        System.out.println("\n\n\n\n\n\n"+cs.size());
+            try {
+                
+            Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+
+            double priorScaleX = 1;
+            double priorScaleY = 1;
+
+            for (Canvas cx : cs) {
+
+                priorScaleX = cx.getScaleX();
+                priorScaleY = cx.getScaleY();
+
+                // We may be zoomed in when saving...
+                cx.setScaleX(1);
+                cx.setScaleY(1);
+
+                Event.fireEvent(cx,
+                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+
+                WritableImage wi = new WritableImage((int) canvas.getWidth(), (int) canvas.getWidth());
+
+                SnapshotParameters sp = new SnapshotParameters();
+                //sp.setFill(Color.TRANSPARENT);
+
+                c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
+            }
 
             WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
             SnapshotParameters sp = new SnapshotParameters();
             //sp.setFill(Color.TRANSPARENT);
+            sp.setDepthBuffer(false);
             c.snapshot(sp, writableImage);
-            PixelReader pr = writableImage.getPixelReader();
-            Color color = pr.getColor((int)(Pen.getInstance().getHorizontalPos() * c.getScaleX()), 
-                    (int)(Pen.getInstance().getVerticalPos() * c.getScaleY()));
-            //System.out.println(color);
             
-            return color;
+            //this.canvas.getGraphicsContext2D().drawImage(writableImage, c.getWidth(), c.getHeight());
+            RenderedCanvas rc = new RenderedCanvas();
+            rc.setWritableImage(writableImage);
+            rc.setScaleFactorX(priorScaleX);
+            rc.setScaleFactorY(priorScaleY);
+            rc.setCanvasSizeWidth((int) c.getWidth());
+            rc.setCanvasSizeHeight((int) c.getHeight());
+            
+            this.renderedCaseStack.add(rc);
+            
+            for (Canvas cx : cs) {
+                cx.setScaleX(priorScaleX);
+                cx.setScaleY(priorScaleY);
+            }
+            
+            System.out.println("{} "+this.renderedCaseStack.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        return null;
     }
-
 }

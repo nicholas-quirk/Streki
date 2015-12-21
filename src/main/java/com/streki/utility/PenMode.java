@@ -1,16 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+// Copyright 2015, Nicholas Quirk, All rights reserved.
+
 package com.streki.utility;
 
 /**
  *
- * @author Nicholas
+ * @author Nicholas Quirk
  */
 public enum PenMode {
     
-    COLOR, PICKER;
+    COLOR;
     
 }

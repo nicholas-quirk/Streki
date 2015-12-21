@@ -44,12 +44,10 @@ import javax.imageio.ImageIO;
 import com.streki.Streki;
 import com.streki.utility.FileManager;
 import com.streki.utility.Pen;
-import com.streki.utility.PenMode;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
+import javafx.scene.input.KeyEvent;
 
 
 /**
@@ -145,21 +143,9 @@ public class MainUI {
         Label colorPickerLabel = new Label("Custom Color");
         Label penSizeLabel = new Label("Crayon Size");
         
-        Button colorDropperButton = new Button();
-        colorDropperButton.setText("Color Selector");
-        colorDropperButton.setOnAction(new EventHandler() {
-            public void handle(Event event) {
-                //Pen.getInstance().penMode = PenMode.PICKER;
-                Pen.getInstance().setStrokeColor(Color.TRANSPARENT);
-            }
-        });
-        
         controls.getChildren().addAll(
             colorPickerLabel, 
             colorPicker,
-            new Label(" "),
-            
-            colorDropperButton, 
             new Label(" "),
             
             penSizeLabel, 
@@ -173,6 +159,19 @@ public class MainUI {
         
         stage.setTitle("Streki");
         stage.setScene(scene);
+       
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+
+                  @Override
+                  public void handle(KeyEvent t) {
+                    if((t.getCode() == KeyCode.Z) && t.isControlDown())
+                    {
+                        Event.fireEvent(canvas,t);
+                        //new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                        //        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                    }
+                  }
+              });
         
         // Set the window to the entire size of the screen.
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
@@ -488,7 +487,7 @@ public class MainUI {
                 .setHeight(HEIGHT)
                 .setGlobalAlpha(1)
                 .setFillColor(Color.WHITE)
-                .setCs(cs)
+                .setCs(this.cs)
                 .setStackPane(stackPane)
                 .setSavedCanvasName(savedCanvasName)
                 .setColorPageName(colorPageName)
@@ -505,7 +504,7 @@ public class MainUI {
             // Strip .PNG extension...
             this.canvas.setId(savedCanvasName.substring(0, savedCanvasName.lastIndexOf(".")));
         }
-        this.cs = new ArrayList<Canvas>();
+        //this.cs = new ArrayList<Canvas>();
         this.cs.add(this.canvas);
         
         if(Streki.debugStreki) LOGGER.info("Adding cavnas to stack pane...");
