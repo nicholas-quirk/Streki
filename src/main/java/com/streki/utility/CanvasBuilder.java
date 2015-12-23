@@ -348,79 +348,75 @@ public class CanvasBuilder {
     }
     
     private void undoCanvas() {
-        System.out.println("REMOVING...");
-        RenderedCanvas rc = this.renderedCaseStack.remove(this.renderedCaseStack.size()-1);
-        this.canvas.getGraphicsContext2D().drawImage(rc.getWritableImage(), 0, 0, rc.getCanvasSizeWidth(), rc.getCanvasSizeHeight());
- 
-        // DUPLICATE CODE!!!
-        GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
-        // TODO: Keep file handle.
+        if(this.renderedCaseStack.size() > 0) {
+            RenderedCanvas rc = this.renderedCaseStack.remove(this.renderedCaseStack.size()-1);
+            this.canvas.getGraphicsContext2D().drawImage(rc.getWritableImage(), 0, 0, rc.getCanvasSizeWidth(), rc.getCanvasSizeHeight());
 
-    Image image = null;
-    try {
-        image = FileManager.colorPage(colorPageName);
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
+            // DUPLICATE CODE!!!
+            GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
+            // TODO: Keep file handle.
 
-    // Draws the coloring page on top
-    graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
-            graphicsContext.getCanvas().getHeight());               
+            Image image = null;
+            try {
+                image = FileManager.colorPage(colorPageName);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
+            // Draws the coloring page on top
+            graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
+                    graphicsContext.getCanvas().getHeight());               
+        }
     }
     
     private void saveCanvas() {
-        System.out.println("\n\n\n\n\n\n"+cs.size());
-            try {
+        try {
+            if(cs != null && cs.size() > 0) {
+                Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+
+                c.getGraphicsContext2D().setLineCap(StrokeLineCap.ROUND);
+                c.getGraphicsContext2D().setLineJoin(StrokeLineJoin.ROUND);
+                c.getGraphicsContext2D().setGlobalAlpha(globalAlpha);
                 
-            Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+                double priorScaleX = 1;
+                double priorScaleY = 1;
+                
+                for (Canvas cx : cs) {
 
-            double priorScaleX = 1;
-            double priorScaleY = 1;
+                    priorScaleX = cx.getScaleX();
+                    priorScaleY = cx.getScaleY();
 
-            for (Canvas cx : cs) {
+                    // We may be zoomed in when saving...
+                    cx.setScaleX(1);
+                    cx.setScaleY(1);
 
-                priorScaleX = cx.getScaleX();
-                priorScaleY = cx.getScaleY();
+                    Event.fireEvent(cx,
+                            new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                    MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
 
-                // We may be zoomed in when saving...
-                cx.setScaleX(1);
-                cx.setScaleY(1);
+                    WritableImage wi = new WritableImage((int) canvas.getWidth(), (int) canvas.getWidth());
+                    SnapshotParameters sp = new SnapshotParameters();
+                    c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
+                }
 
-                Event.fireEvent(cx,
-                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
-
-                WritableImage wi = new WritableImage((int) canvas.getWidth(), (int) canvas.getWidth());
-
+                WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
                 SnapshotParameters sp = new SnapshotParameters();
-                //sp.setFill(Color.TRANSPARENT);
+                c.snapshot(sp, writableImage);
 
-                c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
-            }
+                RenderedCanvas rc = new RenderedCanvas();
+                rc.setWritableImage(writableImage);
+                rc.setScaleFactorX(priorScaleX);
+                rc.setScaleFactorY(priorScaleY);
+                rc.setCanvasSizeWidth((int) c.getWidth());
+                rc.setCanvasSizeHeight((int) c.getHeight());
 
-            WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
-            SnapshotParameters sp = new SnapshotParameters();
-            //sp.setFill(Color.TRANSPARENT);
-            sp.setDepthBuffer(false);
-            c.snapshot(sp, writableImage);
-            
-            //this.canvas.getGraphicsContext2D().drawImage(writableImage, c.getWidth(), c.getHeight());
-            RenderedCanvas rc = new RenderedCanvas();
-            rc.setWritableImage(writableImage);
-            rc.setScaleFactorX(priorScaleX);
-            rc.setScaleFactorY(priorScaleY);
-            rc.setCanvasSizeWidth((int) c.getWidth());
-            rc.setCanvasSizeHeight((int) c.getHeight());
-            
-            this.renderedCaseStack.add(rc);
-            
-            for (Canvas cx : cs) {
-                cx.setScaleX(priorScaleX);
-                cx.setScaleY(priorScaleY);
+                this.renderedCaseStack.add(rc);
+
+                for (Canvas cx : cs) {
+                    cx.setScaleX(priorScaleX);
+                    cx.setScaleY(priorScaleY);
+                }
             }
-            
-            System.out.println("{} "+this.renderedCaseStack.size());
         } catch (Exception e) {
             e.printStackTrace();
         }

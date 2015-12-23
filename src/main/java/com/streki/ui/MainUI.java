@@ -147,12 +147,11 @@ public class MainUI {
             colorPickerLabel, 
             colorPicker,
             new Label(" "),
-            
             penSizeLabel, 
             penSizeSlider,
             new Label(" "),
-            
             quickColorsScrollPane);
+       
         border.setRight(controls);
 
         Scene scene = new Scene(border);
@@ -160,19 +159,8 @@ public class MainUI {
         stage.setTitle("Streki");
         stage.setScene(scene);
        
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+        createGlobalKeyboardCommands(scene);
 
-                  @Override
-                  public void handle(KeyEvent t) {
-                    if((t.getCode() == KeyCode.Z) && t.isControlDown())
-                    {
-                        Event.fireEvent(canvas,t);
-                        //new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                        //        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
-                    }
-                  }
-              });
-        
         // Set the window to the entire size of the screen.
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(primaryScreenBounds.getMinX());
@@ -182,6 +170,18 @@ public class MainUI {
         
         stage.getIcons().add(new Image(Streki.class.getResourceAsStream("/icon.png")));
         stage.show();
+    }
+    
+    private void createGlobalKeyboardCommands(Scene scene) {
+        // Control-Z is handled by the canvas element.
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+                  @Override
+                  public void handle(KeyEvent t) {
+                    if((t.getCode() == KeyCode.Z) && t.isControlDown()) {
+                        Event.fireEvent(canvas,t);
+                    }
+            }
+        });
     }
     
     private void createDefaultColorPalette() {
@@ -364,7 +364,11 @@ public class MainUI {
         MenuItem newMenuItem1 = new MenuItem();
         newMenuItem1.setText("Face");
         newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif", null));
-        newMenu.getItems().add(newMenuItem1);
+        
+        MenuItem newMenuItem2 = new MenuItem();
+        newMenuItem2.setText("Squares");
+        newMenuItem2.setOnAction((ae) -> createColoringPage(stage, "squares.png", null));
+        newMenu.getItems().addAll(newMenuItem1, newMenuItem2);
         
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
