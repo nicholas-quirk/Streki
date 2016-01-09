@@ -6,6 +6,12 @@ import java.util.logging.Logger;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import com.streki.Streki;
+import com.streki.utility.Pen;
+import com.streki.utility.PenMode;
+import static javafx.scene.input.SwipeEvent.SWIPE_DOWN;
+import static javafx.scene.input.SwipeEvent.SWIPE_LEFT;
+import static javafx.scene.input.SwipeEvent.SWIPE_RIGHT;
+import static javafx.scene.input.SwipeEvent.SWIPE_UP;
 
 /**
  *
@@ -25,19 +31,28 @@ public class CustomStackPane extends StackPane {
         LOGGER.info("Creating new CustomStackPane...");
 
         setOnMousePressed((event) -> {
-            pressedX = event.getX();
-            pressedY = event.getY();
-            if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
+            if(event.isSynthesized() == false) {
+                pressedX = event.getX();
+                pressedY = event.getY();
+                if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
+                event.consume();
+            } else {
+                event.consume();
+            }
         });
 
+        // For moving the picture
         setOnMouseDragged((event) -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
+            if (event.getButton() == MouseButton.SECONDARY && event.isSynthesized() == false) {
                 setTranslateX(getTranslateX() + event.getX() - pressedX);
                 setTranslateY(getTranslateY() + event.getY() - pressedY);
                 event.consume();
                 if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
                         (getTranslateX() + event.getX() - pressedX)+"y: " +
                         (getTranslateY() + event.getY() - pressedY));
+                event.consume();
+            } else {
+                event.consume();
             }
         });
     }

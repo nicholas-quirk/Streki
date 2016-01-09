@@ -48,6 +48,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.SwipeEvent;
+import javafx.scene.input.TouchEvent;
 
 
 /**
@@ -58,8 +60,6 @@ public class MainUI {
     
     private final static Logger LOGGER = Logger.getLogger(MainUI.class.getName());
     
-    private static int WIDTH = 800;
-    private static int HEIGHT = 800;
     
     // GUI members.
     MenuBar menuBar;
@@ -72,6 +72,7 @@ public class MainUI {
     ColorPicker colorPicker;
     Slider penSizeSlider;
     VBox quickColors;
+    Menu loadMenu;
             
     // State members
     List<Canvas> cs = new ArrayList<Canvas>();
@@ -79,6 +80,7 @@ public class MainUI {
     Pen pen;
     Stage stage;
     RenderedImage ri;
+    CanvasBuilder canvasBuilder;
 
     public ColorPicker getColorPicker() {
         return this.colorPicker;
@@ -169,6 +171,7 @@ public class MainUI {
         stage.setHeight(primaryScreenBounds.getHeight());
         
         stage.getIcons().add(new Image(Streki.class.getResourceAsStream("/icon.png")));
+        
         stage.show();
     }
     
@@ -370,30 +373,22 @@ public class MainUI {
         newMenuItem2.setOnAction((ae) -> createColoringPage(stage, "squares.png", null));
         newMenu.getItems().addAll(newMenuItem1, newMenuItem2);
         
+        MenuItem newMenuItem3 = new MenuItem();
+        newMenuItem3.setText("face");
+        newMenuItem3.setOnAction((ae) -> createColoringPage(stage, "Untitled.png", null));
+        newMenu.getItems().addAll(newMenuItem1, newMenuItem3);
+        
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
         menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
-        menuItemSave.setOnAction((ae) -> saveRenderedImage());
+        menuItemSave.setOnAction((ae) -> { 
+                saveRenderedImage();
+                createLoadItems();
+        });
         
-        Menu loadMenu = new Menu();
+        loadMenu = new Menu();
         loadMenu.setText("Load");
-        
-        try {
-            ArrayList<String> dirListing = (new FileManager()).getSavedDirListing();
-            if(dirListing != null) {
-                for(String savedName : dirListing) {
-                    Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis(new Long(savedName.substring(0, savedName.indexOf("."))));
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
-                    String displayName = sdf.format(c.getTime());
-                    MenuItem menuItemLoad = new MenuItem(displayName);
-                    menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, "coloring-adult-mask.gif", savedName));
-                    loadMenu.getItems().add(menuItemLoad);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        createLoadItems();
 
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
@@ -473,7 +468,7 @@ public class MainUI {
             sp.setFill(Color.TRANSPARENT);
             c.snapshot(sp, writableImage);
             RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-            ImageIO.write(renderedImage, "png", (new FileManager()).savedFile(this.canvas.getId() + ".png"));
+            ImageIO.write(renderedImage, "png", (new FileManager()).savedFile(this.canvasBuilder.getColorPageName().substring(0, this.canvasBuilder.getColorPageName().lastIndexOf("."))+"-"+this.canvas.getId() + ".png"));
             
             for (Canvas cx : cs) {
                 cx.setScaleX(priorScaleX);
@@ -484,19 +479,48 @@ public class MainUI {
         }
     }
     
+    private void createLoadItems() {
+        loadMenu.getItems().clear();
+        try {
+            ArrayList<String> dirListing = (new FileManager()).getSavedDirListing();
+            if(dirListing != null) {
+                for(String savedName : dirListing) {
+                    Calendar c = Calendar.getInstance();
+                    
+                    String colorPageName = savedName.split("-")[0];
+                    String savedFileTime = savedName.split("-")[1];
+                    
+                    c.setTimeInMillis(new Long(savedFileTime.substring(0, savedFileTime.indexOf("."))));
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
+                    String displayName = colorPageName+" | "+sdf.format(c.getTime());
+                    MenuItem menuItemLoad = new MenuItem(displayName);
+                    menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, colorPageName+".png", savedName));
+                    loadMenu.getItems().add(menuItemLoad);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     private void createColoringPage(Stage stage, String colorPageName, String savedCanvasName) {
-        this.canvas = (new CanvasBuilder())
+        
+        Image image = FileManager.colorPage(colorPageName);
+        
+        this.canvasBuilder = (new CanvasBuilder())
                 .setStage(stage)
-                .setWidth(WIDTH)
-                .setHeight(HEIGHT)
+                .setWidth((int)image.getWidth())
+                .setHeight((int)image.getHeight())
                 .setGlobalAlpha(1)
                 .setFillColor(Color.WHITE)
                 .setCs(this.cs)
                 .setStackPane(stackPane)
                 .setSavedCanvasName(savedCanvasName)
                 .setColorPageName(colorPageName)
-                .setMainUI(this)
-                .createCanvas();
+                .setMainUI(this);
+        
+        this.canvas = canvasBuilder.createCanvas();
+        
         Event.fireEvent(this.canvas, 
                 new MouseEvent(MouseEvent.MOUSE_PRESSED, 0, 0, 0, 0, 
                         MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));

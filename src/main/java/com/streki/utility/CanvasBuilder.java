@@ -33,6 +33,12 @@ import java.util.ArrayList;
 import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import static javafx.scene.input.SwipeEvent.SWIPE_DOWN;
+import static javafx.scene.input.SwipeEvent.SWIPE_LEFT;
+import static javafx.scene.input.SwipeEvent.SWIPE_RIGHT;
+import static javafx.scene.input.SwipeEvent.SWIPE_UP;
+import javafx.scene.input.TouchEvent;
+import javafx.scene.input.ZoomEvent;
 import javax.imageio.ImageIO;
 
 /**
@@ -106,24 +112,44 @@ public class CanvasBuilder {
         GraphicsContext graphicsContext = this.canvas.getGraphicsContext2D();
 
         initDraw(graphicsContext);
-
+        
+        this.canvas.setOnTouchPressed((event) -> {
+            Pen.getInstance().penMode = PenMode.NONE;
+            event.consume();
+        });
+        
+        this.canvas.setOnTouchMoved((event) -> {
+            event.consume();
+        });
+        
+        this.canvas.setOnTouchStationary((event) -> {
+            event.consume();
+        });
+        
+        this.canvas.setOnTouchReleased((event) -> {
+            Pen.getInstance().penMode = PenMode.COLOR;
+            event.consume();
+        });
+        
         this.canvas.setOnScroll(new EventHandler<ScrollEvent>() {
             @Override
             public void handle(ScrollEvent e) {
+                
+                if(Pen.getInstance().penMode == PenMode.COLOR) {
+                    double r = (e.getDeltaY() < 0) ? 1.1 : 0.9;
+                    double zx = canvas.getScaleX() * r;
+                    double zy = canvas.getScaleY() * r;
 
-                double r = (e.getDeltaY() < 0) ? 1.1 : 0.9;
-                double zx = canvas.getScaleX() * r;
-                double zy = canvas.getScaleY() * r;
+                    xScale = zx;
+                    yScale = zy;
 
-                xScale = zx;
-                yScale = zy;
+                    canvas.setScaleX(zx);
+                    canvas.setScaleY(zy);
 
-                canvas.setScaleX(zx);
-                canvas.setScaleY(zy);
-
-                Event.fireEvent(canvas,
-                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                    Event.fireEvent(canvas,
+                            new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                    MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                }
             }
         });
 
@@ -195,8 +221,8 @@ public class CanvasBuilder {
 
                     @Override
                     public void handle(MouseEvent event) {
-                        
-                        if (event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
+
+                        if ((event.isSynthesized() == false) && event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
                             graphicsContext.lineTo(event.getX(), event.getY());
                             graphicsContext.stroke();
                             event.consume();
