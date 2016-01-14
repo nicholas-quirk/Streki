@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.ImageCursor;
 import javafx.scene.SnapshotParameters;
@@ -18,7 +17,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
@@ -33,12 +31,6 @@ import java.util.ArrayList;
 import javafx.scene.image.PixelReader;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import static javafx.scene.input.SwipeEvent.SWIPE_DOWN;
-import static javafx.scene.input.SwipeEvent.SWIPE_LEFT;
-import static javafx.scene.input.SwipeEvent.SWIPE_RIGHT;
-import static javafx.scene.input.SwipeEvent.SWIPE_UP;
-import javafx.scene.input.TouchEvent;
-import javafx.scene.input.ZoomEvent;
 import javax.imageio.ImageIO;
 
 /**
@@ -131,144 +123,124 @@ public class CanvasBuilder {
             event.consume();
         });
         
-        this.canvas.setOnScroll(new EventHandler<ScrollEvent>() {
-            @Override
-            public void handle(ScrollEvent e) {
-                
-                if(Pen.getInstance().penMode == PenMode.COLOR) {
-                    double r = (e.getDeltaY() < 0) ? 1.1 : 0.9;
-                    double zx = canvas.getScaleX() * r;
-                    double zy = canvas.getScaleY() * r;
+        this.canvas.setOnScroll((event) -> {
 
-                    xScale = zx;
-                    yScale = zy;
+            if(Pen.getInstance().penMode == PenMode.COLOR) {
+                double r = (event.getDeltaY() < 0) ? 1.1 : 0.9;
+                double zx = canvas.getScaleX() * r;
+                double zy = canvas.getScaleY() * r;
 
-                    canvas.setScaleX(zx);
-                    canvas.setScaleY(zy);
+                xScale = zx;
+                yScale = zy;
 
-                    Event.fireEvent(canvas,
-                            new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                                    MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                canvas.setScaleX(zx);
+                canvas.setScaleY(zy);
+
+                Event.fireEvent(canvas,
+                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+            }
+        });
+
+        this.canvas.setOnMouseExited((event) -> {
+            Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
+        });
+
+        this.canvas.setOnMouseEntered((event) -> {
+            try {
+                if (Pen.getInstance().getLineWidth() * xScale > 9) {
+                    // When we zoom in we want the marker tip to increase.
+                    Canvas canvas = new Canvas((Pen.getInstance().getLineWidth() * xScale), (Pen.getInstance().getLineWidth() * yScale));
+                    canvas.getGraphicsContext2D().setFill(((Color) Pen.getInstance().getStrokeColor()).darker());
+
+                    // Create a rectangle and write is to disk.
+                    canvas.getGraphicsContext2D().fillRect(0, 0, Pen.getInstance().getLineWidth() * xScale, Pen.getInstance().getLineWidth() * yScale);
+                    WritableImage writableImage = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
+                    SnapshotParameters sp = new SnapshotParameters();
+                    sp.setFill(Color.TRANSPARENT);
+                    canvas.snapshot(sp, writableImage);
+                    RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
+                    javax.imageio.ImageIO.write(renderedImage, "png", new File(FileManager.baseUserDirectory, "cursor.png"));
+                    Image image = new Image("file:///" + (new File(FileManager.baseUserDirectory, "cursor.png")).getAbsolutePath());
+
+                    Streki.getPrimaryStage().getScene().setCursor(new ImageCursor(image,
+                            image.getWidth() / 2,
+                            image.getHeight() / 2));
+                } else {
+                    Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        this.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> {
+                        
+            // Save current instance of canvas
+            saveCanvas();
+
+            //Pen.getInstance().setHorizontalPos(event.getX());
+            //Pen.getInstance().setVerticalPos(event.getY());
+            if(Pen.getInstance().penMode == PenMode.COLOR) {
+                graphicsContext.setStroke(Pen.getInstance().getStrokeColor());
+                graphicsContext.setLineWidth(Pen.getInstance().getLineWidth());
+
+                graphicsContext.beginPath();
+                graphicsContext.moveTo(event.getX(), event.getY());
+            }
+            
+            if(Pen.getInstance().penMode == PenMode.PICKER) {
+                /**
+                WritableImage writableImage = mainUI.getScene().snapshot(null);
+                try {
+                    ImageIO.write(SwingFXUtils.fromFXImage(writableImage, null), "png", new File("StrekiTemp.png"));
+                } catch(Exception e) {
+                    
+                } 
+                PixelReader pr = writableImage.getPixelReader();
+                Color pickerColor = pr.getColor((int)event.getX(), (int)event.getY());
+               Pen.getInstance().setStrokeColor(pickerColor);
+               **/
+            }
+        });
+
+        this.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, (event) -> {
+                if ((event.isSynthesized() == false) && event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
+                    graphicsContext.lineTo(event.getX(), event.getY());
+                    graphicsContext.stroke();
+                    event.consume();
                 }
             }
-        });
-
-        this.canvas.setOnMouseExited(new EventHandler<MouseEvent>() {
-
-            @Override
-            public void handle(MouseEvent event) {
-                Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
-            }
-
-        });
-
-        this.canvas.setOnMouseEntered(new EventHandler<MouseEvent>() {
-
-            @Override
-            public void handle(MouseEvent event) {
+        );
+        
+        this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, (event) -> {
+                //if(Pen.getInstance().penMode == PenMode.PICKER) {
+                //    Pen.getInstance().penMode = PenMode.COLOR;
+                //}
+                // TODO: Keep file handle.
+                Image image = null;
                 try {
-                    if (Pen.getInstance().getLineWidth() * xScale > 9) {
-                        // When we zoom in we want the marker tip to increase.
-                        Canvas canvas = new Canvas((Pen.getInstance().getLineWidth() * xScale), (Pen.getInstance().getLineWidth() * yScale));
-                        canvas.getGraphicsContext2D().setFill(((Color) Pen.getInstance().getStrokeColor()).darker());
-
-                        // Create a rectangle and write is to disk.
-                        canvas.getGraphicsContext2D().fillRect(0, 0, Pen.getInstance().getLineWidth() * xScale, Pen.getInstance().getLineWidth() * yScale);
-                        WritableImage writableImage = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
-                        SnapshotParameters sp = new SnapshotParameters();
-                        sp.setFill(Color.TRANSPARENT);
-                        canvas.snapshot(sp, writableImage);
-                        RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-                        javax.imageio.ImageIO.write(renderedImage, "png", new File(FileManager.baseUserDirectory, "cursor.png"));
-                        Image image = new Image("file:///" + (new File(FileManager.baseUserDirectory, "cursor.png")).getAbsolutePath());
-
-                        Streki.getPrimaryStage().getScene().setCursor(new ImageCursor(image,
-                                image.getWidth() / 2,
-                                image.getHeight() / 2));
-                    } else {
-                        Streki.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
-                    }
+                    image = FileManager.colorPage(colorPageName);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
 
-        });
-
-        this.canvas.addEventHandler(MouseEvent.MOUSE_PRESSED,
-                new EventHandler<MouseEvent>() {
-
-                    @Override
-                    public void handle(MouseEvent event) {
-                        
-                        // Save current instance of canvas
-                        saveCanvas();
-                        
-                        //Pen.getInstance().setHorizontalPos(event.getX());
-                        //Pen.getInstance().setVerticalPos(event.getY());
-                        if(Pen.getInstance().penMode == PenMode.COLOR) {
-                            graphicsContext.setStroke(Pen.getInstance().getStrokeColor());
-                            graphicsContext.setLineWidth(Pen.getInstance().getLineWidth());
-
-                            graphicsContext.beginPath();
-                            graphicsContext.moveTo(event.getX(), event.getY());
-                        }
-                    }
-                });
-
-        this.canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED,
-                new EventHandler<MouseEvent>() {
-
-                    @Override
-                    public void handle(MouseEvent event) {
-
-                        if ((event.isSynthesized() == false) && event.getButton() == MouseButton.PRIMARY && Pen.getInstance().penMode == PenMode.COLOR) {
-                            graphicsContext.lineTo(event.getX(), event.getY());
-                            graphicsContext.stroke();
-                            event.consume();
-                        }
-                    }
-                });
-        
-        this.canvas.addEventHandler(MouseEvent.MOUSE_RELEASED,
-                new EventHandler<MouseEvent>() {
-
-                    @Override
-                    public void handle(MouseEvent event) {
-                        
-
-                        
-                        // TODO: Keep file handle.
-                        Image image = null;
-                        try {
-                            image = FileManager.colorPage(colorPageName);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        
-                        // Draws the coloring page on top
-                        graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
-                                graphicsContext.getCanvas().getHeight());
-                        
-
-                    }
-
-                });
+                // Draws the coloring page on top
+                graphicsContext.drawImage(image, 0, 0, graphicsContext.getCanvas().getWidth(),
+                        graphicsContext.getCanvas().getHeight());
+            });
         
         
-        this.canvas.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+        this.canvas.addEventHandler(KeyEvent.KEY_PRESSED, (event) -> {
 
-                  @Override
-                  public void handle(KeyEvent t) {
-                    if((t.getCode() == KeyCode.Z) && t.isControlDown())
-                    {
-                        undoCanvas();
-                        //Event.fireEvent(canvas,t);
-                        //new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                        //        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
-                        t.consume();
-                    }
-                  }
+                if((event.getCode() == KeyCode.Z) && event.isControlDown())
+                {
+                    undoCanvas();
+                    //Event.fireEvent(canvas,t);
+                    //new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                    //        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                    event.consume();
+                }
               });
         
         return this.canvas;

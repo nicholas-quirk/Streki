@@ -8,6 +8,6 @@ package com.streki.utility;
  */
 public enum PenMode {
     
-    COLOR, NONE;
+    COLOR, NONE, PICKER;
  
 }

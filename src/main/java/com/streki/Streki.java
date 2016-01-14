@@ -6,9 +6,6 @@ import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import com.streki.ui.MainUI;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
-import javafx.scene.input.TouchEvent;
 
 /**
  *
@@ -32,7 +29,7 @@ public class Streki extends Application {
     public void start(Stage primaryStage) {
         if(debugStreki) LOGGER.info("Starting application...");
         Streki.primaryStage = primaryStage;
-    
+        
         this.ui = new MainUI(primaryStage);
     }
 

@@ -6,12 +6,6 @@ import java.util.logging.Logger;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import com.streki.Streki;
-import com.streki.utility.Pen;
-import com.streki.utility.PenMode;
-import static javafx.scene.input.SwipeEvent.SWIPE_DOWN;
-import static javafx.scene.input.SwipeEvent.SWIPE_LEFT;
-import static javafx.scene.input.SwipeEvent.SWIPE_RIGHT;
-import static javafx.scene.input.SwipeEvent.SWIPE_UP;
 
 /**
  *

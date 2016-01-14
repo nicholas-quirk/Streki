@@ -44,12 +44,12 @@ import javax.imageio.ImageIO;
 import com.streki.Streki;
 import com.streki.utility.FileManager;
 import com.streki.utility.Pen;
+import com.streki.utility.PenMode;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.SwipeEvent;
-import javafx.scene.input.TouchEvent;
 
 
 /**
@@ -73,6 +73,8 @@ public class MainUI {
     Slider penSizeSlider;
     VBox quickColors;
     Menu loadMenu;
+    Button eraser;
+    Scene scene;
             
     // State members
     List<Canvas> cs = new ArrayList<Canvas>();
@@ -145,6 +147,17 @@ public class MainUI {
         Label colorPickerLabel = new Label("Custom Color");
         Label penSizeLabel = new Label("Crayon Size");
         
+        if(Streki.debugStreki) LOGGER.info("Initializing eraser button...");
+        createEraser();
+        
+        /**
+        Button button = new Button("Color Picker");
+        button.setOnAction((event) -> {
+            Pen.getInstance().penMode = PenMode.PICKER;
+            Pen.getInstance().setStrokeColor(Color.WHITE);
+        });
+        **/
+        
         controls.getChildren().addAll(
             colorPickerLabel, 
             colorPicker,
@@ -152,11 +165,16 @@ public class MainUI {
             penSizeLabel, 
             penSizeSlider,
             new Label(" "),
-            quickColorsScrollPane);
+            eraser,
+            new Label(" "),
+            //button,
+            //new Label(" "),
+            quickColorsScrollPane,
+            new Label(" "));
        
         border.setRight(controls);
 
-        Scene scene = new Scene(border);
+        scene = new Scene(border);
         
         stage.setTitle("Streki");
         stage.setScene(scene);
@@ -173,6 +191,21 @@ public class MainUI {
         stage.getIcons().add(new Image(Streki.class.getResourceAsStream("/icon.png")));
         
         stage.show();
+    }
+
+    public Scene getScene() {
+        return scene;
+    }
+
+    public void setScene(Scene scene) {
+        this.scene = scene;
+    }
+    
+    private void createEraser() {
+        this.eraser = new Button("Eraser");
+        this.eraser.setOnAction((event) -> {
+            Pen.getInstance().setStrokeColor(Color.WHITE);
+        });
     }
     
     private void createGlobalKeyboardCommands(Scene scene) {
@@ -280,12 +313,14 @@ public class MainUI {
         penSizeSlider = new Slider();
         penSizeSlider.setMin(0);
         penSizeSlider.setMax(10);
-        penSizeSlider.setValue(1);
+        penSizeSlider.setValue(8);
         penSizeSlider.setShowTickLabels(true);
         penSizeSlider.setShowTickMarks(true);
         penSizeSlider.setMajorTickUnit(2);
         penSizeSlider.setMinorTickCount(1);
         penSizeSlider.setBlockIncrement(2);
+        
+        Pen.getInstance().setLineWidth(penSizeSlider.getValue());
         
         penSizeSlider.valueProperty().addListener((cl) -> {
             if(Streki.debugStreki) LOGGER.info("Changed Pen size to "+Pen.getInstance().getLineWidth());
@@ -298,12 +333,10 @@ public class MainUI {
         colorPicker.setValue(Color.CORAL);
         
         if(Streki.debugStreki) LOGGER.info("Setting color picker onAction...");
-        colorPicker.setOnAction(new EventHandler() {
-            public void handle(Event event) {
+        colorPicker.setOnAction((event) -> {
                 strokeColor = colorPicker.getValue();
                 Pen.getInstance().setStrokeColor(colorPicker.getValue());
                 if(Streki.debugStreki) LOGGER.info("Changed Pen color to "+Pen.getInstance().getStrokeColor());
-            }
         });
     }
     
@@ -344,7 +377,8 @@ public class MainUI {
             Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("How To");
             alert.setHeaderText("Using Streki");
-            alert.setContentText("Streki is best used with a table PC and stylus, although you can use it with a desktop or laptop and mouse just fine."
+            alert.setContentText("Streki is best used with a table PC and stylus, although you can use it with a desktop or laptop just fine."
+                    + "\n\nA mouse is currently required for zooming and panning. I don't find the JavaFX API to be the best at handling finger gestures. At least not with a canvas, which Streki uses."
                     + "\n\nLoad coloring pictures from the File -> New option."
                     + "\n\nClick on a crayon to select a color or use the color picker to find something else."
                     + "\n\nClick and drag to start coloring."
@@ -364,19 +398,37 @@ public class MainUI {
         Menu newMenu = new Menu();
         newMenu.setText("New");
         
-        MenuItem newMenuItem1 = new MenuItem();
-        newMenuItem1.setText("Face");
-        newMenuItem1.setOnAction((ae) -> createColoringPage(stage, "coloring-adult-mask.gif", null));
+        Menu newMenuOptionShapes = new Menu();
+        newMenuOptionShapes.setText("Shapes");
+        Menu newMenuOptionQuirkFaces = new Menu();
+        newMenuOptionQuirkFaces.setText("Quirk Faces");
         
-        MenuItem newMenuItem2 = new MenuItem();
-        newMenuItem2.setText("Squares");
-        newMenuItem2.setOnAction((ae) -> createColoringPage(stage, "squares.png", null));
-        newMenu.getItems().addAll(newMenuItem1, newMenuItem2);
+        MenuItem menuItemQuirkFace1 = new MenuItem();
+        menuItemQuirkFace1.setText("Thunder Cheecks by Nicholas Quirk");
+        menuItemQuirkFace1.setOnAction((ae) -> createColoringPage(stage, "Thunder_Cheeks_by_Nicholas_Quirk.png", null));
+        newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace1);
         
-        MenuItem newMenuItem3 = new MenuItem();
-        newMenuItem3.setText("face");
-        newMenuItem3.setOnAction((ae) -> createColoringPage(stage, "Untitled.png", null));
-        newMenu.getItems().addAll(newMenuItem1, newMenuItem3);
+        MenuItem menuItemQuirkFace2 = new MenuItem();
+        menuItemQuirkFace2.setText("Starry Eyes by Nicholas Quirk");
+        menuItemQuirkFace2.setOnAction((ae) -> createColoringPage(stage, "Starry_Eyes_by_Nicholas_Quirk.png", null));
+        newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace2);
+        
+        MenuItem menuItemShapes1 = new MenuItem();
+        menuItemShapes1.setText("Random Circles by Nicholas Quirk");
+        menuItemShapes1.setOnAction((ae) -> createColoringPage(stage, "Random_Circles_by_Nicholas_Quirk.png", null));
+        newMenuOptionShapes.getItems().add(menuItemShapes1);
+        
+        MenuItem menuItemShapes2 = new MenuItem();
+        menuItemShapes2.setText("Perfect Squares by Nicholas Quirk.png");
+        menuItemShapes2.setOnAction((ae) -> createColoringPage(stage, "Perfect_Squares_by_Nicholas_Quirk.png", null));
+        newMenuOptionShapes.getItems().add(menuItemShapes2);
+        
+        MenuItem menuItemShapes3 = new MenuItem();
+        menuItemShapes3.setText("Triangle Mangle by Nicholas Quirk.png");
+        menuItemShapes3.setOnAction((ae) -> createColoringPage(stage, "Triangle_Mangle_by_Nicholas_Quirk.png", null));
+        newMenuOptionShapes.getItems().add(menuItemShapes3);
+        
+        newMenu.getItems().addAll(newMenuOptionShapes, newMenuOptionQuirkFaces);
         
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
@@ -569,14 +621,10 @@ public class MainUI {
         gc.lineTo(25, 32);
         gc.stroke();
         
-        c.addEventHandler(MouseEvent.MOUSE_PRESSED,
-                new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent event) {
-                        Pen.getInstance().setStrokeColor(color);
-                        colorPicker.setValue(color);
-                    }
-                });
+        c.addEventHandler(MouseEvent.MOUSE_PRESSED, (event) -> {
+            Pen.getInstance().setStrokeColor(color);
+            colorPicker.setValue(color);
+        });
         
        return c;
     }   
