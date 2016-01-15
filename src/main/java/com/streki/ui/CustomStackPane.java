@@ -26,6 +26,8 @@ public class CustomStackPane extends StackPane {
 
         setOnMousePressed((event) -> {
             if(event.isSynthesized() == false) {
+                // Synthesized mouse events are touch.
+                // Let's ignore them for now.
                 pressedX = event.getX();
                 pressedY = event.getY();
                 if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMousePressed x: " + pressedX + "y: " + pressedY);
@@ -37,10 +39,10 @@ public class CustomStackPane extends StackPane {
 
         // For moving the picture
         setOnMouseDragged((event) -> {
-            if (event.getButton() == MouseButton.SECONDARY && event.isSynthesized() == false) {
+            if (event.getButton() == MouseButton.SECONDARY 
+                    && event.isSynthesized() == false) {
                 setTranslateX(getTranslateX() + event.getX() - pressedX);
                 setTranslateY(getTranslateY() + event.getY() - pressedY);
-                event.consume();
                 if(Streki.debugVerboseStreki) LOGGER.info("CustomStackPane -> setOnMouseDragged x: " +
                         (getTranslateX() + event.getX() - pressedX)+"y: " +
                         (getTranslateY() + event.getY() - pressedY));
@@ -50,4 +52,5 @@ public class CustomStackPane extends StackPane {
             }
         });
     }
+    
 }

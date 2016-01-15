@@ -9,7 +9,7 @@ import javafx.scene.image.Image;
 
 /**
  *
- * @author Nicholas
+ * @author Nicholas Quirk
  */
 public class FileManager {
 

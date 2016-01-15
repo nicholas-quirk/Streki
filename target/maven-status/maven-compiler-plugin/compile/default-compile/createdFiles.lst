@@ -1,6 +1,5 @@
 com\streki\Streki.class
 com\streki\utility\CanvasBuilder.class
-com\streki\ui\MainUI$1.class
 com\streki\ui\CustomStackPane.class
 com\streki\ui\MainUI.class
 com\streki\ui\RenderedCanvas.class

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.Event;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -44,7 +43,6 @@ import javax.imageio.ImageIO;
 import com.streki.Streki;
 import com.streki.utility.FileManager;
 import com.streki.utility.Pen;
-import com.streki.utility.PenMode;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -60,7 +58,6 @@ public class MainUI {
     
     private final static Logger LOGGER = Logger.getLogger(MainUI.class.getName());
     
-    
     // GUI members.
     MenuBar menuBar;
     Menu fileMenu;
@@ -75,12 +72,12 @@ public class MainUI {
     Menu loadMenu;
     Button eraser;
     Scene scene;
-            
-    // State members
-    List<Canvas> cs = new ArrayList<Canvas>();
     Color strokeColor;
     Pen pen;
     Stage stage;
+    
+    // State members
+    List<Canvas> cs = new ArrayList<Canvas>();
     RenderedImage ri;
     CanvasBuilder canvasBuilder;
 
@@ -150,14 +147,6 @@ public class MainUI {
         if(Streki.debugStreki) LOGGER.info("Initializing eraser button...");
         createEraser();
         
-        /**
-        Button button = new Button("Color Picker");
-        button.setOnAction((event) -> {
-            Pen.getInstance().penMode = PenMode.PICKER;
-            Pen.getInstance().setStrokeColor(Color.WHITE);
-        });
-        **/
-        
         controls.getChildren().addAll(
             colorPickerLabel, 
             colorPicker,
@@ -167,8 +156,6 @@ public class MainUI {
             new Label(" "),
             eraser,
             new Label(" "),
-            //button,
-            //new Label(" "),
             quickColorsScrollPane,
             new Label(" "));
        
@@ -189,18 +176,9 @@ public class MainUI {
         stage.setHeight(primaryScreenBounds.getHeight());
         
         stage.getIcons().add(new Image(Streki.class.getResourceAsStream("/icon.png")));
-        
         stage.show();
     }
 
-    public Scene getScene() {
-        return scene;
-    }
-
-    public void setScene(Scene scene) {
-        this.scene = scene;
-    }
-    
     private void createEraser() {
         this.eraser = new Button("Eraser");
         this.eraser.setOnAction((event) -> {
@@ -210,12 +188,9 @@ public class MainUI {
     
     private void createGlobalKeyboardCommands(Scene scene) {
         // Control-Z is handled by the canvas element.
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-                  @Override
-                  public void handle(KeyEvent t) {
-                    if((t.getCode() == KeyCode.Z) && t.isControlDown()) {
-                        Event.fireEvent(canvas,t);
-                    }
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, (event) -> {
+            if((event.getCode() == KeyCode.Z) && event.isControlDown()) {
+                Event.fireEvent(canvas, event);
             }
         });
     }
@@ -312,7 +287,7 @@ public class MainUI {
     private void createPenSlider() {
         penSizeSlider = new Slider();
         penSizeSlider.setMin(0);
-        penSizeSlider.setMax(10);
+        penSizeSlider.setMax(16);
         penSizeSlider.setValue(8);
         penSizeSlider.setShowTickLabels(true);
         penSizeSlider.setShowTickMarks(true);
@@ -322,7 +297,7 @@ public class MainUI {
         
         Pen.getInstance().setLineWidth(penSizeSlider.getValue());
         
-        penSizeSlider.valueProperty().addListener((cl) -> {
+        penSizeSlider.valueProperty().addListener((listener) -> {
             if(Streki.debugStreki) LOGGER.info("Changed Pen size to "+Pen.getInstance().getLineWidth());
             Pen.getInstance().setLineWidth(penSizeSlider.getValue());
         });
@@ -359,7 +334,7 @@ public class MainUI {
     private void createHelpMenuChoices() {
         MenuItem aboutMenuItem = new MenuItem();
         aboutMenuItem.setText("About");
-        aboutMenuItem.setOnAction((ae) -> {
+        aboutMenuItem.setOnAction((event) -> {
             Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("About");
             alert.setHeaderText("Author: Nicholas Quirk");
@@ -373,7 +348,7 @@ public class MainUI {
         
         MenuItem howToMenuItem = new MenuItem();
         howToMenuItem.setText("How To");
-        howToMenuItem.setOnAction((ae) -> {
+        howToMenuItem.setOnAction((event) -> {
             Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("How To");
             alert.setHeaderText("Using Streki");
@@ -405,35 +380,50 @@ public class MainUI {
         
         MenuItem menuItemQuirkFace1 = new MenuItem();
         menuItemQuirkFace1.setText("Thunder Cheecks by Nicholas Quirk");
-        menuItemQuirkFace1.setOnAction((ae) -> createColoringPage(stage, "Thunder_Cheeks_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace1.setOnAction((event) -> createColoringPage(stage, "Thunder_Cheeks_by_Nicholas_Quirk.png", null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace1);
         
         MenuItem menuItemQuirkFace2 = new MenuItem();
         menuItemQuirkFace2.setText("Starry Eyes by Nicholas Quirk");
-        menuItemQuirkFace2.setOnAction((ae) -> createColoringPage(stage, "Starry_Eyes_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace2.setOnAction((event) -> createColoringPage(stage, "Starry_Eyes_by_Nicholas_Quirk.png", null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace2);
+        
+        MenuItem menuItemQuirkFace3 = new MenuItem();
+        menuItemQuirkFace3.setText("Killbot by Nicholas Quirk");
+        menuItemQuirkFace3.setOnAction((event) -> createColoringPage(stage, "Killbot_by_Nicholas_Quirk.png", null));
+        newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace3);
+        
+        MenuItem menuItemQuirkFace4 = new MenuItem();
+        menuItemQuirkFace4.setText("Anty by Nicholas_Quirk");
+        menuItemQuirkFace4.setOnAction((event) -> createColoringPage(stage, "Anty_by_Nicholas_Quirk.png", null));
+        newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace4);
         
         MenuItem menuItemShapes1 = new MenuItem();
         menuItemShapes1.setText("Random Circles by Nicholas Quirk");
-        menuItemShapes1.setOnAction((ae) -> createColoringPage(stage, "Random_Circles_by_Nicholas_Quirk.png", null));
+        menuItemShapes1.setOnAction((event) -> createColoringPage(stage, "Random_Circles_by_Nicholas_Quirk.png", null));
         newMenuOptionShapes.getItems().add(menuItemShapes1);
         
         MenuItem menuItemShapes2 = new MenuItem();
-        menuItemShapes2.setText("Perfect Squares by Nicholas Quirk.png");
-        menuItemShapes2.setOnAction((ae) -> createColoringPage(stage, "Perfect_Squares_by_Nicholas_Quirk.png", null));
+        menuItemShapes2.setText("Perfect Squares by Nicholas Quirk");
+        menuItemShapes2.setOnAction((event) -> createColoringPage(stage, "Perfect_Squares_by_Nicholas_Quirk.png", null));
         newMenuOptionShapes.getItems().add(menuItemShapes2);
         
         MenuItem menuItemShapes3 = new MenuItem();
-        menuItemShapes3.setText("Triangle Mangle by Nicholas Quirk.png");
-        menuItemShapes3.setOnAction((ae) -> createColoringPage(stage, "Triangle_Mangle_by_Nicholas_Quirk.png", null));
+        menuItemShapes3.setText("Triangle Mangle by Nicholas Quirk");
+        menuItemShapes3.setOnAction((event) -> createColoringPage(stage, "Triangle_Mangle_by_Nicholas_Quirk.png", null));
         newMenuOptionShapes.getItems().add(menuItemShapes3);
+        
+        MenuItem menuItemShapes4 = new MenuItem();
+        menuItemShapes4.setText("Starry Sight");
+        menuItemShapes4.setOnAction((event) -> createColoringPage(stage, "Starry_Sight_by_Nicholas_Quirk.png", null));
+        newMenuOptionShapes.getItems().add(menuItemShapes4);
         
         newMenu.getItems().addAll(newMenuOptionShapes, newMenuOptionQuirkFaces);
         
         MenuItem menuItemSave = new MenuItem("_Save");
         menuItemSave.setMnemonicParsing(true);
         menuItemSave.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN));
-        menuItemSave.setOnAction((ae) -> { 
+        menuItemSave.setOnAction((event) -> { 
                 saveRenderedImage();
                 createLoadItems();
         });
@@ -444,7 +434,7 @@ public class MainUI {
 
         MenuItem menuItemExport = new MenuItem();
         menuItemExport.setText("Export PNG");
-        menuItemExport.setOnAction((ae) -> {
+        menuItemExport.setOnAction((event) -> {
                 
                 FileChooser fileChooser = new FileChooser();
                  
@@ -474,15 +464,15 @@ public class MainUI {
                         c.snapshot(sp, writableImage);
                         RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
                         ImageIO.write(renderedImage, "png", file);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             });
 
         MenuItem menuItemExit = new MenuItem();
         menuItemExit.setText("Exit");
-        menuItemExit.setOnAction((ae) -> System.exit(0));
+        menuItemExit.setOnAction((event) -> System.exit(0));
         
         fileMenu.getItems().addAll(newMenu, menuItemSave, loadMenu, menuItemExport, menuItemExit);
     }
@@ -544,9 +534,9 @@ public class MainUI {
                     
                     c.setTimeInMillis(new Long(savedFileTime.substring(0, savedFileTime.indexOf("."))));
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
-                    String displayName = colorPageName+" | "+sdf.format(c.getTime());
+                    String displayName = colorPageName.replaceAll("_", " ")+" | "+sdf.format(c.getTime());
                     MenuItem menuItemLoad = new MenuItem(displayName);
-                    menuItemLoad.setOnAction((ae) -> createColoringPage(this.stage, colorPageName+".png", savedName));
+                    menuItemLoad.setOnAction((event) -> createColoringPage(this.stage, colorPageName+".png", savedName));
                     loadMenu.getItems().add(menuItemLoad);
                 }
             }
@@ -627,5 +617,6 @@ public class MainUI {
         });
         
        return c;
-    }   
+    }
+    
 }
