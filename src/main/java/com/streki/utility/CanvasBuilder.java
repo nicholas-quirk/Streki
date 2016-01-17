@@ -54,6 +54,7 @@ public class CanvasBuilder {
     private String savedCanvasName;
     private MainUI mainUI;
     List<RenderedCanvas> renderedCaseStack = new ArrayList<RenderedCanvas>();
+    private Integer canvasId;
 
     private void initDraw(GraphicsContext gc) {
         if (Streki.debugStreki) {
@@ -393,6 +394,15 @@ public class CanvasBuilder {
 
     public Canvas getCanvas() {
         return this.canvas;
+    }
+
+    public Integer getCanvasId() {
+        return canvasId;
+    }
+
+    public CanvasBuilder setCanvasId(Integer canvasId) {
+        this.canvasId = canvasId;
+        return this;
     }
     
 }

@@ -287,7 +287,7 @@ public class MainUI {
     private void createPenSlider() {
         penSizeSlider = new Slider();
         penSizeSlider.setMin(0);
-        penSizeSlider.setMax(16);
+        penSizeSlider.setMax(8);
         penSizeSlider.setValue(8);
         penSizeSlider.setShowTickLabels(true);
         penSizeSlider.setShowTickMarks(true);
@@ -380,42 +380,42 @@ public class MainUI {
         
         MenuItem menuItemQuirkFace1 = new MenuItem();
         menuItemQuirkFace1.setText("Thunder Cheecks by Nicholas Quirk");
-        menuItemQuirkFace1.setOnAction((event) -> createColoringPage(stage, "Thunder_Cheeks_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace1.setOnAction((event) -> createColoringPage(stage, "Thunder_Cheeks_by_Nicholas_Quirk.png", null, null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace1);
         
         MenuItem menuItemQuirkFace2 = new MenuItem();
         menuItemQuirkFace2.setText("Starry Eyes by Nicholas Quirk");
-        menuItemQuirkFace2.setOnAction((event) -> createColoringPage(stage, "Starry_Eyes_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace2.setOnAction((event) -> createColoringPage(stage, "Starry_Eyes_by_Nicholas_Quirk.png", null, null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace2);
         
         MenuItem menuItemQuirkFace3 = new MenuItem();
         menuItemQuirkFace3.setText("Killbot by Nicholas Quirk");
-        menuItemQuirkFace3.setOnAction((event) -> createColoringPage(stage, "Killbot_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace3.setOnAction((event) -> createColoringPage(stage, "Killbot_by_Nicholas_Quirk.png", null, null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace3);
         
         MenuItem menuItemQuirkFace4 = new MenuItem();
         menuItemQuirkFace4.setText("Anty by Nicholas_Quirk");
-        menuItemQuirkFace4.setOnAction((event) -> createColoringPage(stage, "Anty_by_Nicholas_Quirk.png", null));
+        menuItemQuirkFace4.setOnAction((event) -> createColoringPage(stage, "Anty_by_Nicholas_Quirk.png", null, null));
         newMenuOptionQuirkFaces.getItems().add(menuItemQuirkFace4);
         
         MenuItem menuItemShapes1 = new MenuItem();
         menuItemShapes1.setText("Random Circles by Nicholas Quirk");
-        menuItemShapes1.setOnAction((event) -> createColoringPage(stage, "Random_Circles_by_Nicholas_Quirk.png", null));
+        menuItemShapes1.setOnAction((event) -> createColoringPage(stage, "Random_Circles_by_Nicholas_Quirk.png", null, null));
         newMenuOptionShapes.getItems().add(menuItemShapes1);
         
         MenuItem menuItemShapes2 = new MenuItem();
         menuItemShapes2.setText("Perfect Squares by Nicholas Quirk");
-        menuItemShapes2.setOnAction((event) -> createColoringPage(stage, "Perfect_Squares_by_Nicholas_Quirk.png", null));
+        menuItemShapes2.setOnAction((event) -> createColoringPage(stage, "Perfect_Squares_by_Nicholas_Quirk.png", null, null));
         newMenuOptionShapes.getItems().add(menuItemShapes2);
         
         MenuItem menuItemShapes3 = new MenuItem();
         menuItemShapes3.setText("Triangle Mangle by Nicholas Quirk");
-        menuItemShapes3.setOnAction((event) -> createColoringPage(stage, "Triangle_Mangle_by_Nicholas_Quirk.png", null));
+        menuItemShapes3.setOnAction((event) -> createColoringPage(stage, "Triangle_Mangle_by_Nicholas_Quirk.png", null, null));
         newMenuOptionShapes.getItems().add(menuItemShapes3);
         
         MenuItem menuItemShapes4 = new MenuItem();
-        menuItemShapes4.setText("Starry Sight");
-        menuItemShapes4.setOnAction((event) -> createColoringPage(stage, "Starry_Sight_by_Nicholas_Quirk.png", null));
+        menuItemShapes4.setText("Starry Sight by Nicholas Quirk");
+        menuItemShapes4.setOnAction((event) -> createColoringPage(stage, "Starry_Sight_by_Nicholas_Quirk.png", null, null));
         newMenuOptionShapes.getItems().add(menuItemShapes4);
         
         newMenu.getItems().addAll(newMenuOptionShapes, newMenuOptionQuirkFaces);
@@ -536,7 +536,8 @@ public class MainUI {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy - MM - dd @ hh : mm : ss a");
                     String displayName = colorPageName.replaceAll("_", " ")+" | "+sdf.format(c.getTime());
                     MenuItem menuItemLoad = new MenuItem(displayName);
-                    menuItemLoad.setOnAction((event) -> createColoringPage(this.stage, colorPageName+".png", savedName));
+                    String canvasId = savedFileTime.substring(0, savedFileTime.lastIndexOf("."));
+                    menuItemLoad.setOnAction((event) -> createColoringPage(this.stage, colorPageName+".png", savedName, canvasId));
                     loadMenu.getItems().add(menuItemLoad);
                 }
             }
@@ -545,9 +546,11 @@ public class MainUI {
         }
     }
     
-    private void createColoringPage(Stage stage, String colorPageName, String savedCanvasName) {
+    private void createColoringPage(Stage stage, String colorPageName, String savedCanvasName, String savedFileTime) {
         
         Image image = FileManager.colorPage(colorPageName);
+        
+        System.out.println(colorPageName);
         
         this.canvasBuilder = (new CanvasBuilder())
                 .setStage(stage)
@@ -572,7 +575,7 @@ public class MainUI {
             this.canvas.setId(Calendar.getInstance().getTimeInMillis()+"");
         } else {
             // Strip .PNG extension...
-            this.canvas.setId(savedCanvasName.substring(0, savedCanvasName.lastIndexOf(".")));
+            this.canvas.setId(savedFileTime);
         }
         //this.cs = new ArrayList<Canvas>();
         this.cs.add(this.canvas);
