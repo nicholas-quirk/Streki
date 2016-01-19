@@ -21,10 +21,14 @@ public class FileManager {
     public ArrayList<String> getSavedDirListing() {
         ArrayList<String> names = null;
         try {
+            
             if((new java.io.File(System.getProperty("user.home"), "Streki")).exists() == false) {
                 new java.io.File(System.getProperty("user.home"), "Streki").mkdirs();
+            }
+            if(new java.io.File(baseUserDirectory, "saved").exists() == false) {
                 new java.io.File(baseUserDirectory, "saved").mkdirs();
             }
+            
             File f = new File(baseUserDirectory, "saved");
             if(f != null && f.list() != null) {
                 names = new ArrayList<String>(Arrays.asList(f.list()));

@@ -356,7 +356,9 @@ public class MainUI {
                     + "\n\nA mouse is currently required for zooming and panning. I don't find the JavaFX API to be the best at handling finger gestures. At least not with a canvas, which Streki uses."
                     + "\n\nLoad coloring pictures from the File -> New option."
                     + "\n\nClick on a crayon to select a color or use the color picker to find something else."
-                    + "\n\nClick and drag to start coloring."
+                    + "\n\nLeft click and drag to start coloring."
+                    + "\n\nRight click and drag to move the picture around."
+                    + "\n\nUse the scroll button to zoom in."
                     + "\n\nYou can save and load colorings for later."
                     + "\n\nYou can export your artwork, print it and put it on the fridge."
             );
@@ -447,26 +449,7 @@ public class MainUI {
                 File file = fileChooser.showSaveDialog(stage);
                 
                 if(file != null){
-                    try {
-                        
-                        Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
-                        for(Canvas cx : cs) {
-                            WritableImage wi = new WritableImage((int)canvas.getWidth(), (int)canvas.getWidth());
-                            
-                            SnapshotParameters sp = new SnapshotParameters();
-                            sp.setFill(Color.TRANSPARENT);
-                            c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
-                        }
-                        
-                        WritableImage writableImage = new WritableImage((int)c.getWidth(), (int)c.getHeight());
-                        SnapshotParameters sp = new SnapshotParameters();
-                        sp.setFill(Color.TRANSPARENT);
-                        c.snapshot(sp, writableImage);
-                        RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-                        ImageIO.write(renderedImage, "png", file);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    canvasOutput(file);
                 }
             });
 
@@ -478,45 +461,48 @@ public class MainUI {
     }
     
     public void saveRenderedImage() {
+        canvasOutput((new FileManager()).savedFile(this.canvasBuilder.getColorPageName().substring(0, this.canvasBuilder.getColorPageName().lastIndexOf("."))+"-"+this.canvas.getId() + ".png"));
+    }
+    
+    private void canvasOutput(File file) {
         try {
-            Canvas c = new Canvas(cs.get(0).getWidth(), cs.get(0).getHeight());
+
+            Canvas c = new Canvas(canvasBuilder.getWidth(), canvasBuilder.getHeight());
 
             double priorScaleX = 1;
             double priorScaleY = 1;
 
-            for (Canvas cx : cs) {
-
+            for(Canvas cx : cs) {
                 priorScaleX = cx.getScaleX();
                 priorScaleY = cx.getScaleY();
 
-                // We may be zoomed in when saving...
+
                 cx.setScaleX(1);
                 cx.setScaleY(1);
 
                 Event.fireEvent(cx,
-                        new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
-                                MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
+                    new MouseEvent(MouseEvent.MOUSE_ENTERED, 0, 0, 0, 0,
+                        MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null));
 
-                WritableImage wi = new WritableImage((int) canvas.getWidth(), (int) canvas.getWidth());
+                WritableImage wi = new WritableImage((int)canvasBuilder.getWidth(), (int)canvasBuilder.getHeight());
 
                 SnapshotParameters sp = new SnapshotParameters();
                 sp.setFill(Color.TRANSPARENT);
-
                 c.getGraphicsContext2D().drawImage(cx.snapshot(sp, wi), 0, 0);
             }
 
-            WritableImage writableImage = new WritableImage((int) c.getWidth(), (int) c.getHeight());
+            WritableImage writableImage = new WritableImage((int)c.getWidth(), (int)c.getHeight());
             SnapshotParameters sp = new SnapshotParameters();
             sp.setFill(Color.TRANSPARENT);
             c.snapshot(sp, writableImage);
             RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
-            ImageIO.write(renderedImage, "png", (new FileManager()).savedFile(this.canvasBuilder.getColorPageName().substring(0, this.canvasBuilder.getColorPageName().lastIndexOf("."))+"-"+this.canvas.getId() + ".png"));
-            
+            ImageIO.write(renderedImage, "png", file);
+
             for (Canvas cx : cs) {
                 cx.setScaleX(priorScaleX);
                 cx.setScaleY(priorScaleY);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

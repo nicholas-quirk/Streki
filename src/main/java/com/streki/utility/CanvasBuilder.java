@@ -212,6 +212,8 @@ public class CanvasBuilder {
             });
         
         
+        // This feature is ready for prime time.
+        // It could be a Windows 10 bug.
         this.canvas.addEventHandler(KeyEvent.KEY_PRESSED, (event) -> {
                 if((event.getCode() == KeyCode.Z) && event.isControlDown()) {
                     undoCanvas();
