@@ -340,7 +340,7 @@ public class MainUI {
             alert.setHeaderText("Author: Nicholas Quirk");
             alert.setContentText("Streki is the product of curiousity and a labor of love."
                     + "\n\nResearch has shown that coloring reduces stress in adults."
-                    + "\n\nThis is open source software: [enter github url]"
+                    + "\n\nThis is open source software: https://github.com/nmquirk/Streki"
                     + "\n\nIf you would like donated money to a passionate programmer: [paypal url]"
                     + "\n\nIf you would like to feature a coloring page or just contact me: nmquirk@gmail.com");
             alert.showAndWait();
